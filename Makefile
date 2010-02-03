@@ -51,6 +51,7 @@ makeall_exe:
    fi; \
    cd src && opp_makemake -f --deep -o inet -O out $$NSC_VERSION_DEF
 
+ 
 checkmakefiles:
 	@if [ ! -f src/Makefile ]; then \
 	echo; \
