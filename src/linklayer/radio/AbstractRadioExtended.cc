@@ -90,9 +90,10 @@ void AbstractRadioExtended::initialize(int stage)
 
         WATCH(noiseLevel);
         WATCH(rs);
+        std::string propModel =  cc->par("propagationModel").stdstringValue();
 
-        if (cc->par("propagationModel").str()!="")
-        	receptionModel = (IReceptionModel *) createOne(cc->par("propagationModel").stringValue());
+        if (propModel!="")
+        	receptionModel = (IReceptionModel *) createOne(propModel.c_str());
         else
         {
         	if (par("attenuationModel").stdstringValue ()=="tworay")
