@@ -578,3 +578,25 @@ const IPAddress ARP::getInverseAddressResolution(const MACAddress &add) const
     return address;
 }
 
+void ARP::setChangeAddress(const IPAddress &oldAddress)
+{
+	Enter_Method_Silent();
+	bool status=false;
+	ARPCache::iterator it;
+	MACAddress address = MACAddress::UNSPECIFIED_ADDRESS;
+    if (globalARP)
+    {
+        it = globalArpCache.find(oldAddress);
+        if (it!=globalArpCache.end())
+        {
+        	ARPCacheEntry *entry = (*it).second;
+        	globalArpCache.erase(it);
+            entry->pending = false;
+            entry->timer = NULL;
+            entry->numRetries = 0;
+            IPAddress nextHopAddr = entry->ie->ipv4Data()->getIPAddress();
+            ARPCache::iterator where = globalArpCache.insert(globalArpCache.begin(),std::make_pair(nextHopAddr,entry));
+            entry->myIter = where; // note: "inserting a new element into a map does not invalidate iterators that point to existing elements"
+        }
+    }
+}
