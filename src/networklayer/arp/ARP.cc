@@ -581,7 +581,6 @@ const IPAddress ARP::getInverseAddressResolution(const MACAddress &add) const
 void ARP::setChangeAddress(const IPAddress &oldAddress)
 {
 	Enter_Method_Silent();
-	bool status=false;
 	ARPCache::iterator it;
 	MACAddress address = MACAddress::UNSPECIFIED_ADDRESS;
     if (globalARP)
