@@ -182,7 +182,7 @@ void SCTPAssociation::sendAll(IPvXAddress pathId)
       if ((state->ackState < sackFrequency) &&
            (bytesToSend == 0) &&
            (bytes.chunk == false) &&
-           (bytes.packet == false)) 
+           (bytes.packet == false))
 	{
          sctpEV3 << "sendAll: nothing to send... chunk pointer is NULL... BYE...\n";
          return;
@@ -391,7 +391,7 @@ void SCTPAssociation::sendAll(IPvXAddress pathId)
 				   datVar->ssn     = nextSSN;
 
                datVar->ordered = true;
-               if (nextSSN > 65535) {   // ??? WÃ¤re uint16 als nextSSN nicht einfacher?
+               if (nextSSN > 65535) {   // ??? Wäre uint16 als nextSSN nicht einfacher?
                   stream->setNextStreamSeqNum(0);
                }
                else {

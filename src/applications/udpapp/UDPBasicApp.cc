@@ -49,10 +49,10 @@ void UDPBasicApp::initialize(int stage)
     while ((token = tokenizer.nextToken())!=NULL)
         destAddresses.push_back(IPAddressResolver().resolve(token));
 
-    bindToPort(localPort);
-
     if (destAddresses.empty())
         return;
+
+    bindToPort(localPort);
 
     cMessage *timer = new cMessage("sendTimer");
     scheduleAt((double)par("messageFreq"), timer);

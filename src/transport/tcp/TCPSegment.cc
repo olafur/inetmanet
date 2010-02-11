@@ -53,7 +53,6 @@ void TCPSegment::parsimUnpack(cCommBuffer *b)
     doUnpacking(b, payloadList);
 }
 
-
 void TCPSegment::setPayloadArraySize(unsigned int size)
 {
     throw cRuntimeError(this, "setPayloadArraySize() not supported, use addPayloadMessage()");

@@ -58,8 +58,8 @@ simple UDPBasicBurst like UDPApp
         bool fixedDestination = default(false);  // if true the destination address is selected at the begining and never change
         
     gates:
-        input udpIn;
-        output udpOut;
+        input udpIn @labels(UDPControlInfo/up);
+        output udpOut @labels(UDPControlInfo/down);
 }
 
 
