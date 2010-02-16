@@ -517,6 +517,9 @@ void TCPConnection::sendSegment(uint32 bytes)
         // check rexmitQ and try to forward snd_nxt before sending new data
         uint32 forward = rexmitQueue->checkRexmitQueueForSackedOrRexmittedSegments(state->snd_nxt);
         state->snd_nxt = state->snd_nxt + forward;
+        ulong buffered = sendQueue->getBytesAvailable(state->snd_nxt);
+        if (bytes > buffered) // last segment?
+            bytes = buffered; 
     }
 
     // send one segment of 'bytes' bytes from snd_nxt, and advance snd_nxt
