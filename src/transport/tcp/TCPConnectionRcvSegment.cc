@@ -132,11 +132,7 @@ TCPEventCode TCPConnection::processSegment1stThru8th(TCPSegment *tcpseg)
         }
         else
         {
-            if (tcpseg->getSynBit())
-            {
-                tcpEV << "SYN with unacceptable seqNum in " <<  stateName(fsm.getState()) << " state received (SYN duplicat?)\n";
-            }
-            else if (state->sack_enabled && seqLess((tcpseg->getSequenceNo()+tcpseg->getPayloadLength()), state->rcv_nxt))
+            if (state->sack_enabled && seqLess((tcpseg->getSequenceNo()+tcpseg->getPayloadLength()), state->rcv_nxt))
             {
                 state->start_seqno = tcpseg->getSequenceNo();
                 state->end_seqno = tcpseg->getSequenceNo() + tcpseg->getPayloadLength();
@@ -403,7 +399,7 @@ TCPEventCode TCPConnection::processSegment1stThru8th(TCPSegment *tcpseg)
     // RFC 793: seventh, process the segment text,
     //
     uint32 old_rcv_nxt = state->rcv_nxt; // if rcv_nxt changes, we need to send/schedule an ACK
-    if (fsm.getState()==TCP_S_SYN_RCVD || fsm.getState()==TCP_S_ESTABLISHED || fsm.getState()==TCP_S_FIN_WAIT_1 || fsm.getState()==TCP_S_FIN_WAIT_2 || fsm.getState()==TCP_S_CLOSE_WAIT)
+    if (fsm.getState()==TCP_S_SYN_RCVD || fsm.getState()==TCP_S_ESTABLISHED || fsm.getState()==TCP_S_FIN_WAIT_1 || fsm.getState()==TCP_S_FIN_WAIT_2)
     {
         //"
         // Once in the ESTABLISHED state, it is possible to deliver segment
@@ -730,7 +726,7 @@ TCPEventCode TCPConnection::processSegmentInListen(TCPSegment *tcpseg, IPvXAddre
         //  state should be changed to SYN-RECEIVED.
         //"
         state->rcv_nxt = tcpseg->getSequenceNo()+1;
-        state->rcv_adv = state->rcv_nxt + state->rcv_wnd; // TODO is it good?
+        state->rcv_adv = state->rcv_nxt + state->rcv_wnd;
         if (rcvAdvVector) rcvAdvVector->record(state->rcv_adv);
         state->irs = tcpseg->getSequenceNo();
         receiveQueue->init(state->rcv_nxt);   // FIXME may init twice...
@@ -863,7 +859,7 @@ TCPEventCode TCPConnection::processSegmentInSynSent(TCPSegment *tcpseg, IPvXAddr
         //   are thereby acknowledged should be removed.
         //
         state->rcv_nxt = tcpseg->getSequenceNo()+1;
-        state->rcv_adv = state->rcv_nxt + state->rcv_wnd; // TODO is it good?
+        state->rcv_adv = state->rcv_nxt + state->rcv_wnd;
         if (rcvAdvVector) rcvAdvVector->record(state->rcv_adv);
         state->irs = tcpseg->getSequenceNo();
         receiveQueue->init(state->rcv_nxt);
