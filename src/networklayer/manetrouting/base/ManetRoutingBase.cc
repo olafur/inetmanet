@@ -31,7 +31,7 @@
 #include "Coord.h"
 #include "ControlInfoBreakLink_m.h"
 #include "Ieee80211Frame_m.h"
-
+#include "ICMPAccess.h"
 #define IP_DEF_TTL 32
 #define UDP_HDR_LEN	8
 
@@ -106,6 +106,12 @@ void ManetRoutingBase::registerRoutingModule()
 	inet_rt = RoutingTableAccess ().get();
 	inet_ift = InterfaceTableAccess ().get();
 	nb = NotificationBoardAccess().get();
+	if (par("useICMP"))
+	{
+		icmpModule = ICMPAccess().getIfExists();
+	}
+	sendToICMP=false;
+
 	const char *classname = getParentModule()->getClassName();
 	mac_layer_=false;
 	if (strcmp(classname,"Ieee80211Mesh")==0)
@@ -1127,3 +1133,42 @@ bool ManetRoutingBase::setRoute(const Uint128 & destination,const Uint128 &nextH
 		return false;
 	return setRoute (destination,nextHop,index,hops,mask);
 };
+
+void ManetRoutingBase::sendICMP(cPacket* pkt)
+{
+	if (pkt==NULL)
+		return;
+
+	if (icmpModule==NULL || !sendToICMP)
+	{
+		delete pkt;
+		return;
+	}
+
+	if (mac_layer_)
+	{
+		// The packet is encapsulated in a Ieee802 frame
+		cPacket *pktAux = pkt->decapsulate();
+		if (pktAux)
+		{
+			delete pkt;
+			pkt=pktAux;
+		}
+	}
+
+	IPDatagram* datagram= dynamic_cast<IPDatagram*>(pkt);
+	if (datagram==NULL)
+	{
+		delete pkt;
+		return;
+	}
+    // don't send ICMP error messages for multicast messages
+    if (datagram->getDestAddress().isMulticast())
+    {
+        EV << "won't send ICMP error messages for multicast message " << datagram << endl;
+        delete pkt;
+        return;
+    }
+	EV << "issuing ICMP Destination Unreachable for packets waiting in queue for failed route discovery.\n";
+	icmpModule->sendErrorMessage(datagram, ICMP_DESTINATION_UNREACHABLE, 0);
+}

@@ -32,6 +32,7 @@
 #include "IPvXAddress.h"
 #include "uint128.h"
 #include "NotifierConsts.h"
+#include "ICMP.h"
 #include <vector>
 
 class ManetRoutingBase;
@@ -58,6 +59,7 @@ class INET_API ManetRoutingBase : public cSimpleModule, public INotifiable
 		 IRoutingTable *inet_rt;
 		 IInterfaceTable *inet_ift;
 		 NotificationBoard *nb;
+		 ICMP * icmpModule;
 		 bool mac_layer_;
 		 Uint128	hostAddress;
 		 Uint128	routerId;
@@ -72,6 +74,7 @@ class INET_API ManetRoutingBase : public cSimpleModule, public INotifiable
 		 bool   usetManetLabelRouting;
 		 bool   isRegistered;
 		 void *commonPtr;
+		 bool sendToICMP;
 
 		 typedef struct InterfaceIdentification
 		 {
@@ -271,6 +274,14 @@ class INET_API ManetRoutingBase : public cSimpleModule, public INotifiable
 		virtual TimerMultiMap *getTimerMultimMap()const {return timerMultiMapPtr;}
 		virtual void setPtr(void *ptr){commonPtr=ptr;}
 		virtual const void * getPtr()const{return commonPtr;}
+		virtual void sendICMP(cPacket*);
+		virtual bool getSendToICMP() {return sendToICMP;}
+		virtual void setSendToICMP(bool val) {
+			if (icmpModule)
+				sendToICMP = val;
+			else
+				sendToICMP=false;
+			}
 
 };
 

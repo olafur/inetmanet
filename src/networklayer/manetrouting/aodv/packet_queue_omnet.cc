@@ -72,7 +72,8 @@ int NS_CLASS packet_queue_garbage_collect(void)
     	if (timeval_diff(&now, &qp->q_time) > MAX_QUEUE_TIME) {
     		list_detach(pos);
 	     //icmpAccess.get()->sendErrorMessage(qp->p, ICMP_DESTINATION_UNREACHABLE, 0);
-            drop (qp->p);
+         //   drop (qp->p);
+            sendICMP(qp->p);
             free(qp);
             count++;
             PQ.len--;
@@ -100,7 +101,8 @@ void NS_CLASS packet_queue_add(cPacket * p, struct in_addr dest_addr)
 		   qp = (struct q_pkt *)PQ.head.next;
 		   list_detach(PQ.head.next);
 		   dgram =qp->p;
-		   drop (dgram);
+		   // drop (dgram);
+		   sendICMP(dgram);
 //	icmpAccess.get()->sendErrorMessage(dgram, ICMP_DESTINATION_UNREACHABLE, ICMP_AODV_QUEUE_FULL);
 		   free(qp);
 		   PQ.len--;
@@ -165,7 +167,8 @@ int NS_CLASS packet_queue_set_verdict(struct in_addr dest_addr, int verdict)
 				}
 				else
 				{
-					drop(qp->p);
+					// drop(qp->p);
+					sendICMP(qp->p);
 				}
 			break;
 			case PQ_SEND:
@@ -180,7 +183,9 @@ int NS_CLASS packet_queue_set_verdict(struct in_addr dest_addr, int verdict)
 				delay += ARP_DELAY;
 				break;
 				case PQ_DROP:
-					drop(qp->p);
+					//drop(qp->p);
+					sendICMP(qp->p);
+
 //				icmpAccess.get()->sendErrorMessage(qp->p, ICMP_DESTINATION_UNREACHABLE, 0);
 				break;
 			}

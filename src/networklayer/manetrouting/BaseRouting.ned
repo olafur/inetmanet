@@ -26,5 +26,6 @@ simple BaseRouting
      string ExcludedInterfaces = default(""); // list of interfaces excluded by the manet routing protocol
      string interfaces=default("prefix(wlan)"); // list of routing interfaces were the routing protocol is active, the 
                                                 // prefix(namei) indicate all the interfaces with "namei" in his names 
-     bool   usetManetLabelRouting = default (true); // the routing entries are marked IPRoute::MANET, this label force an exact search with independent of the mask 
+     bool   usetManetLabelRouting = default (true); // the routing entries are marked IPRoute::MANET, this label force an exact search with independent of the mask
+     bool   useICMP=default(true); // By default the module use the ICMP but it's necessary to activate with the method setSendToICMP(true)
 }

@@ -826,7 +826,8 @@ void NS_CLASS processPacket(IPDatagram * p,unsigned int ifindex)
 			timer_set_timeout(&worb_timer, DELETE_PERIOD);
 		}
 
-		drop (p);
+		//drop (p);
+		sendICMP(p);
 	/* DEBUG(LOG_DEBUG, 0, "Dropping pkt uid=%d", ch->uid()); */
 	//	icmpAccess.get()->sendErrorMessage(p, ICMP_DESTINATION_UNREACHABLE, 0);
 		return;

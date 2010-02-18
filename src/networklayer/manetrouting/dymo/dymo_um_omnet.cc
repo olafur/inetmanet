@@ -717,7 +717,8 @@ void DYMOUM::processPacket(IPDatagram * p,unsigned int ifindex )
 				rerr_send(dest_addr, NET_DIAMETER, entry);
 			default:
 			//	icmpAccess.get()->sendErrorMessage(p, ICMP_DESTINATION_UNREACHABLE, 0);
-				delete p;
+				sendICMP(p);
+				// delete p;
 				break;
 			}
 		}
@@ -787,13 +788,15 @@ void DYMOUM::processMacPacket(cPacket * p,const Uint128 &dest,const Uint128 &src
 						rerr_send(dest_addr, 1, entry,addr);
 					}
 				}
-				delete p;
+				sendICMP(p);
+				//delete p;
 				break;
 			case 1:
 				rerr_send(dest_addr, NET_DIAMETER, entry);
 			default:
 			//	icmpAccess.get()->sendErrorMessage(p, ICMP_DESTINATION_UNREACHABLE, 0);
-				delete p;
+				sendICMP(p);
+				//delete p;
 				break;
 			}
 		}

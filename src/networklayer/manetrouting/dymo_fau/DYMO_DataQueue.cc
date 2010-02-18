@@ -84,7 +84,7 @@ void DYMO_DataQueue::queuePacket(const IPDatagram* datagram) {
 	}
 }
 
-void DYMO_DataQueue::reinjectDatagramsTo(IPAddress destAddr, int prefix, Result verdict) {
+void DYMO_DataQueue::reinjectDatagramsTo(IPAddress destAddr, int prefix, Result verdict,std::list<IPDatagram*> *datagrams) {
 	bool tryAgain = true;
 	double delay = 0;
 	while (tryAgain) {
@@ -101,6 +101,8 @@ void DYMO_DataQueue::reinjectDatagramsTo(IPAddress destAddr, int prefix, Result 
 					moduleOwner->send(qd.datagram,"to_ip");
 					delay += ARP_DELAY;
 				}
+				else if (verdict==DROP && datagrams != NULL)
+					datagrams->push_back( qd.datagram );
 				else if (verdict==DROP)
 					delete qd.datagram;
 				tryAgain = true;
@@ -114,8 +116,8 @@ void DYMO_DataQueue::dequeuePacketsTo(IPAddress destAddr, int prefix) {
 	reinjectDatagramsTo(destAddr, prefix, ACCEPT);
 }
 
-void DYMO_DataQueue::dropPacketsTo(IPAddress destAddr, int prefix) {
-	reinjectDatagramsTo(destAddr, prefix, DROP);
+void DYMO_DataQueue::dropPacketsTo(IPAddress destAddr, int prefix,std::list<IPDatagram*>* datagrams) {
+	reinjectDatagramsTo(destAddr, prefix, DROP,datagrams);
 }
 
 

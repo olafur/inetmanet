@@ -115,6 +115,7 @@ void DYMO::initialize(int aStage) {
 		WATCH_PTR(queuedDataPackets);
 
 		registerRoutingModule ();
+		// setSendToICMP(true);
 		myAddr = getAddress().toUint();
 		linkLayerFeeback();
 	}
@@ -947,9 +948,17 @@ void DYMO::handleRREQTimeout(DYMO_OutstandingRREQ& outstandingRREQ) {
 	} else {
 		/** RREQ_TRIES is reached **/
 
+		std::list<IPDatagram*> datagrams;
 		// drop packets bound for the expired RREQ's destination
 		dymo_routingTable->maintainAssociatedRoutingTable();
-		queuedDataPackets->dropPacketsTo(outstandingRREQ.destAddr, 32);
+		queuedDataPackets->dropPacketsTo(outstandingRREQ.destAddr, 32, &datagrams);
+		while (!datagrams.empty())
+		{
+			IPDatagram* dgram = datagrams.front();
+			datagrams.pop_front();
+			sendICMP(dgram);
+		}
+
 
 		// clean up outstandingRREQList
 		outstandingRREQList.del(&outstandingRREQ);

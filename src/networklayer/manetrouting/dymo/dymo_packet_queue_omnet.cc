@@ -69,20 +69,21 @@ int NS_CLASS packet_queue_garbage_collect(void)
     gettimeofday(&now, NULL);
 
     dlist_for_each_safe(pos, tmp, &PQ.head) {
-	struct q_pkt *qp = (struct q_pkt *)pos;
-	if (timeval_diff(&now, &qp->q_time) > MAX_QUEUE_TIME) {
+    	struct q_pkt *qp = (struct q_pkt *)pos;
+    	if (timeval_diff(&now, &qp->q_time) > MAX_QUEUE_TIME) {
 
-	    dlist_del(pos);
-	     //icmpAccess.get()->sendErrorMessage(qp->p, ICMP_DESTINATION_UNREACHABLE, 0);
-            drop(qp->p);
-	    free(qp);
-	    count++;
-	    PQ.len--;
-	}
+    		dlist_del(pos);
+    		//icmpAccess.get()->sendErrorMessage(qp->p, ICMP_DESTINATION_UNREACHABLE, 0);
+    		//drop(qp->p);
+    		sendICMP(qp->p);
+    		free(qp);
+    		count++;
+    		PQ.len--;
+    	}
     }
 
     if (count) {
-	dlog(LOG_DEBUG, 0, __FUNCTION__, "Dropped %d buffered packets", count);
+    	dlog(LOG_DEBUG, 0, __FUNCTION__, "Dropped %d buffered packets", count);
     }
 
 	return count;
@@ -106,7 +107,8 @@ void NS_CLASS packet_queue_add(cPacket * p, struct in_addr dest_addr)
 
 		dlist_del(PQ.head.next);
 		dgram =qp->p;
-		drop(dgram);
+		sendICMP(dgram);
+		//drop(dgram);
 		//icmpAccess.get()->sendErrorMessage(dgram, ICMP_DESTINATION_UNREACHABLE, ICMP_AODV_QUEUE_FULL);
 		free(qp);
 		PQ.len--;
@@ -156,7 +158,8 @@ int NS_CLASS packet_queue_set_verdict(struct in_addr dest_addr, int verdict)
 				case PQ_ENC_SEND:
 					if (isInMacLayer())
 					{
-						drop(qp->p);
+						//drop(qp->p);
+						sendICMP(qp->p);
 					}
 					else if (dynamic_cast <IPDatagram *> (qp->p))
 					{
@@ -172,7 +175,8 @@ int NS_CLASS packet_queue_set_verdict(struct in_addr dest_addr, int verdict)
 					}
 					else
 					{
-						drop(qp->p);
+						//drop(qp->p);
+						sendICMP(qp->p);
 					}
 					break;
 				case PQ_SEND:
@@ -180,7 +184,8 @@ int NS_CLASS packet_queue_set_verdict(struct in_addr dest_addr, int verdict)
 						return -1;
 					if (qp->inTransit)
 					{
-						drop(qp->p);
+						// drop(qp->p);
+						sendICMP(qp->p);
 					}
 					else
 					{
@@ -203,7 +208,8 @@ int NS_CLASS packet_queue_set_verdict(struct in_addr dest_addr, int verdict)
 					}
 					break;
 				case PQ_DROP:
-					drop(qp->p);
+					// drop(qp->p);
+					sendICMP(qp->p);
 					// icmpAccess.get()->sendErrorMessage(qp->p, ICMP_DESTINATION_UNREACHABLE, 0);
 					break;
 			}
