@@ -224,8 +224,14 @@ void DYMO::handleMessage(cMessage* apMsg)
 			msg_aux  = udpPacket->decapsulate();
 
 			IPControlInfo *controlInfo = check_and_cast<IPControlInfo*>(udpPacket->removeControlInfo());
+			if (isLocalAddress(controlInfo->getSrcAddr()) || controlInfo->getSrcAddr().isUnspecified())
+			{
+				// local address delete packet
+				delete msg_aux;
+				delete controlInfo;
+				return;
+			}
 			msg_aux->setControlInfo(controlInfo);
-
 		}
 
 		if (udpPacket)

@@ -505,6 +505,7 @@ void ManetRoutingBase::sendToIp (cPacket *msg, int srcPort, const Uint128& destA
 		// send to IPv4
 		IPAddress add = destAddr.getIPAddress();
 		IPAddress  srcadd;
+		IPAddress LL_MANET_ROUTERS = "224.0.0.90";
 
 
 // If found interface We use the address of interface
@@ -526,7 +527,7 @@ void ManetRoutingBase::sendToIp (cPacket *msg, int srcPort, const Uint128& destA
 		if (ie!=NULL)
 			ipControlInfo->setInterfaceId(ie->getInterfaceId());
 
-		if (add == IPAddress::ALLONES_ADDRESS && ie == NULL)
+		if ((add == IPAddress::ALLONES_ADDRESS || add == LL_MANET_ROUTERS) && ie == NULL)
 		{
 // In this case we send a broadcast packet per interface
 			for (unsigned int i = 0;i<interfaceVector.size()-1;i++)
