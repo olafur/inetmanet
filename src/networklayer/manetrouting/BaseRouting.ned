@@ -28,4 +28,6 @@ simple BaseRouting
                                                 // prefix(namei) indicate all the interfaces with "namei" in his names 
      bool   usetManetLabelRouting = default (true); // the routing entries are marked IPRoute::MANET, this label force an exact search with independent of the mask
      bool   useICMP=default(true); // By default the module use the ICMP but it's necessary to activate with the method setSendToICMP(true)
+     bool   setICMPSourceAddress=default(false); // set the datagram source address if the address is undefined to the address of node
+                                                 // This parameter allow that the ICMP messages could arrive to the source applications 
 }

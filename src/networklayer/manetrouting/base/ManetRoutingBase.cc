@@ -1169,6 +1169,9 @@ void ManetRoutingBase::sendICMP(cPacket* pkt)
         delete pkt;
         return;
     }
+    // check source address
+    if (datagram->getSrcAddress().isUnspecified() && par("setICMPSourceAddress"))
+    	datagram->setSrcAddress(inet_ift->getInterface(0)->ipv4Data()->getIPAddress());
 	EV << "issuing ICMP Destination Unreachable for packets waiting in queue for failed route discovery.\n";
 	icmpModule->sendErrorMessage(datagram, ICMP_DESTINATION_UNREACHABLE, 0);
 }
