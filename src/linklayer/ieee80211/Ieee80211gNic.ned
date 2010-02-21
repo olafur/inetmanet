@@ -32,11 +32,12 @@ import inet.linklayer.radio.Ieee80211gRadio;
 module Ieee80211gNic
 {
     parameters:
+        @display("i=block/ifcard");
         string mgmtType; // name of the management module type
     gates:
         input uppergateIn; // to upper layers
         output uppergateOut; // from upper layers
-        input radioIn; // to receive AirFrames
+        input radioIn @labels(AirFrame); // to receive AirFrames
     submodules:
         mgmt: <mgmtType> like Ieee80211Mgmt {
             parameters:

@@ -150,7 +150,7 @@ ChannelControl::HostRef ChannelControl::registerHost(cModule *host, const Coord&
     he.radioInGate = radioInGate;
     he.pos = initialPos;
     he.isNeighborListValid = false;
-    he.channel = 0; // for now
+    he.channel = 0;  // for now
     hosts.push_back(he);
     return &hosts.back(); // last element
 }

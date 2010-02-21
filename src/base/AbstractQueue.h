@@ -45,8 +45,7 @@ class INET_API AbstractQueue : public cSimpleModule
     /**
      * The queue.
      */
-/*    cPacketQueue queue;*/
-    cQueue queue;
+    cPacketQueue queue;
 
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);

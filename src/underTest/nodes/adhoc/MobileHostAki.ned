@@ -120,9 +120,7 @@ module MobileHostAki
         }
 
         tcp.ipOut --> networkLayer.tcpIn;
-        tcp.ipIn <-- networkLayer.TCPOut;
-
-        //for i=0..numUdpApps-1 {
+        tcp.ipIn <-- networkLayer.tcpOut;
           //  udpApp[i].udpOut --> udp.appIn++;
             //udpApp[i].udpIn <-- udp.appOut++;
         //}

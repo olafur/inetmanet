@@ -49,6 +49,8 @@ module WirelessHostMultiRadio
 {
     parameters:
         @node();
+        @labels(node,ethernet-node,wireless-node);
+        @display("i=device/wifilaptop");
         int numRadios =default (1);
         int numTcpApps = default(0);
         int numUdpApps = default(0);
@@ -58,10 +60,9 @@ module WirelessHostMultiRadio
         string routingFile = default("");
         string mobilityType = default("NullMobility");
         
-        @display("i=device/wifilaptop");
     gates:
-        inout pppg[];
-        inout ethg[];
+        inout pppg[] @labels(PPPFrame-conn);
+        inout ethg[] @labels(EtherFrame-conn);
         input radioIn[numRadios] @directIn;
     submodules:
         notificationBoard: NotificationBoard {
@@ -130,7 +131,7 @@ module WirelessHostMultiRadio
         }
 
         tcp.ipOut --> networkLayer.tcpIn;
-        tcp.ipIn <-- networkLayer.TCPOut;
+        tcp.ipIn <-- networkLayer.tcpOut;
 
         for i=0..numUdpApps-1 {
             udpApp[i].udpOut --> udp.appIn++;

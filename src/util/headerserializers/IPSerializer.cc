@@ -30,8 +30,8 @@ namespace INETFw // load headers into a namespace, to avoid conflicts with platf
 #include "IPSerializer.h"
 #include "ICMPSerializer.h"
 #include "UDPSerializer.h"
-#include "SCTPSerializer.h"	//I.R.
-#include "TCPSerializer.h"	//I.R.
+#include "SCTPSerializer.h"    //I.R.
+#include "TCPSerializer.h"    //I.R.
 
 #if defined(_MSC_VER)
 #undef s_addr   /* MSVC #definition interferes with us */
@@ -85,11 +85,11 @@ int IPSerializer::serialize(const IPDatagram *dgram, unsigned char *buf, unsigne
         packetLength += UDPSerializer().serialize(check_and_cast<UDPPacket *>(encapPacket),
                                                    buf+IP_HEADER_BYTES, bufsize-IP_HEADER_BYTES);
         break;
-      case IP_PROT_SCTP:	//I.R.
+      case IP_PROT_SCTP:    //I.R.
         packetLength += SCTPSerializer().serialize(check_and_cast<SCTPMessage *>(encapPacket),
                                                    buf+IP_HEADER_BYTES, bufsize-IP_HEADER_BYTES);
         break;
-      case IP_PROT_TCP:		//I.R.
+      case IP_PROT_TCP:        //I.R.
         packetLength += TCPSerializer().serialize(check_and_cast<TCPSegment *>(encapPacket),
                                                    buf+IP_HEADER_BYTES, bufsize-IP_HEADER_BYTES,
                                                    dgram->getSrcAddress(), dgram->getDestAddress());

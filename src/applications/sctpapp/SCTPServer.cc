@@ -103,7 +103,7 @@ uint32 numBytes;
 
 	cPacket* cmsg = new cPacket("CMSG");
 	SCTPSimpleMessage* msg=new SCTPSimpleMessage("Server");
-	numBytes=(long uint32)par("requestLength");
+	numBytes=(uint32)par("requestLength");
 	msg->setDataArraySize(numBytes);
 	for (uint32 i=0; i<numBytes; i++)
 	{

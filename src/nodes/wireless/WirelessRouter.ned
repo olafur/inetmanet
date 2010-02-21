@@ -42,6 +42,8 @@ module WirelessRouter
 {
     parameters:
         @node();
+        @labels(node,ethernet-node,wireless-node);
+        @display("i=device/accesspoint;bgl=2");
         string routingFile = default("");
         int numTcpApps = default(0);
         int numUdpApps = default(0);
@@ -50,10 +52,9 @@ module WirelessRouter
         string mgmtType = default("IEEE80211MgmtAP");
         bool IPForward = default(true);
         int namid = default(-1);
-        @display("i=device/accesspoint;bgl=2");
     gates:
-        inout pppg[];
-        inout ethg[];
+        inout pppg[] @labels(PPPFrame-conn);
+        inout ethg[] @labels(EtherFrame-conn);
         input radioIn @directIn;
     submodules:
         notificationBoard: NotificationBoard {
@@ -137,7 +138,7 @@ module WirelessRouter
         udp.ipOut --> networkLayer.udpIn;
         networkLayer.udpOut --> udp.ipIn;
         tcp.ipOut --> networkLayer.tcpIn;
-        networkLayer.TCPOut --> tcp.ipIn;
+        networkLayer.tcpOut --> tcp.ipIn;
         pingApp.pingOut --> networkLayer.pingIn;
         networkLayer.pingOut --> pingApp.pingIn;
         networkLayer.ifOut++ --> wlan.uppergateIn;

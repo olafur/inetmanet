@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2006 Andras Varga and Levente M�sz�ros
+// Copyright (C) 2006 Andras Varga and Levente Mészáros
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -68,8 +68,8 @@ simple Ieee80211Mac
         bool fixFSM = default(false);
         @display("i=block/layer");
     gates:
-        input uppergateIn;
-        output uppergateOut;
-        input lowergateIn;
-        output lowergateOut;
+        input uppergateIn @labels(Ieee80211Frame);
+        output uppergateOut @labels(Ieee80211Frame);
+        input lowergateIn @labels(Ieee80211Frame);
+        output lowergateOut @labels(Ieee80211Frame);
 }

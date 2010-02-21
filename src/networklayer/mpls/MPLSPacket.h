@@ -20,16 +20,15 @@
 #include <omnetpp.h>
 #include "INETDefs.h"
 
-
 /**
  * Represents a packet with MPLS headers
  */
 class INET_API MPLSPacket: public cPacket
 {
-
   protected:
-    typedef std::vector<int> LabelStack;
+    typedef std::vector<int> LabelStack; // note: last element is the top of stack
     LabelStack labels;
+
   public:
     /* constructors*/
     MPLSPacket(const char *name=NULL);
@@ -43,7 +42,7 @@ class INET_API MPLSPacket: public cPacket
      */
     virtual MPLSPacket *dup() const {return new MPLSPacket(*this);}
 
-    /*
+    /**
      * Returns a string with the labels, starting with the top of stack.
      */
     virtual std::string info() const;

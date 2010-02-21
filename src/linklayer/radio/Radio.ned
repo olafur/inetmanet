@@ -80,9 +80,11 @@ package inet.linklayer.radio;
 //
 simple Radio
 {
+    parameters:
+        @display("i=block/wrxtx");
     gates:
-        input uppergateIn;   // from higher layer protocol (MAC)
-        output uppergateOut; // to higher layer protocol (MAC)
-        input radioIn; // to receive frames (AirFrame) on the radio channel
+        input uppergateIn @labels(PhyControlInfo/down); // from higher layer protocol (MAC)
+        output uppergateOut @labels(PhyControlInfo/up); // to higher layer protocol (MAC)
+        input radioIn @labels(AirFrame); // to receive frames (AirFrame) on the radio channel
 }
 

@@ -73,8 +73,8 @@ simple Ieee80211gMac
         bool fixFSM = default(false);
         @display("i=block/layer");
     gates:
-        input uppergateIn;
-        output uppergateOut;
-        input lowergateIn;
-        output lowergateOut;
+        input uppergateIn @labels(Ieee80211Frame);
+        output uppergateOut @labels(Ieee80211Frame);
+        input lowergateIn @labels(Ieee80211Frame);
+        output lowergateOut @labels(Ieee80211Frame);
 }

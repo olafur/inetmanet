@@ -127,7 +127,7 @@ module FixManetRoutingHostVITA
         }
 
         tcp.ipOut --> networkLayer.tcpIn;
-        tcp.ipIn <-- networkLayer.TCPOut;
+        tcp.ipIn <-- networkLayer.tcpOut;
 
         //for i=0..numUdpApps-1 {
         //}

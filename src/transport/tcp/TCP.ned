@@ -19,8 +19,8 @@
 package inet.transport.tcp;
 
 //
-// \TCP protocol implementation. 
-// Supports RFC 793, 1122, 2001, 2018, 2581, 2883, 3042, 3390, 3517 
+// \TCP protocol implementation.
+// Supports RFC 793, 1122, 2001, 2018, 2581, 2883, 3042, 3390, 3517
 // Compatible with both IPv4 and IPv6.
 //
 // A \TCP segment is represented by the class TCPSegment.
@@ -94,8 +94,8 @@ package inet.transport.tcp;
 // It depends on the client (app) modules which sendQueue/rcvQueue they require.
 // For example, TCPGenericSrvApp needs message-based sendQueue/rcvQueue,
 // while TCPEchoApp or TCPSinkApp can work with any (but TCPEchoApp will
-// display different behaviour with both!) In the future, other send queue 
-// and receive queue classes may be implemented, e.g. to allow transmission 
+// display different behaviour with both!) In the future, other send queue
+// and receive queue classes may be implemented, e.g. to allow transmission
 // of "raw bytes" (actual byte arrays).
 //
 //   -# use "TCPMsgBasedSendQueue" and "TCPMsgBasedRcvQueue", which transmit
@@ -108,15 +108,15 @@ package inet.transport.tcp;
 //      of 1 megabyte over the connection. This is a different behaviour
 //      from TCPVirtualDataSendQueue/RcvQueue.
 //
-//   -# use the module parameter (limitedTransmitEnabled) to enabled/disabled 
-//      Limited Transmit algorithm (RFC 3042) integrated to TCPBaseAlg 
-//      (can be used for TCPNewReno, TCPReno, TCPTahoe and TCPNoCongestionControl but not 
+//   -# use the module parameter (limitedTransmitEnabled) to enabled/disabled
+//      Limited Transmit algorithm (RFC 3042) integrated to TCPBaseAlg
+//      (can be used for TCPNewReno, TCPReno, TCPTahoe and TCPNoCongestionControl but not
 //      for DumbTCP).
 //
-//   -# use the parameter (increasedIWEnabled) to change initial window 
-//      from one segment (RFC 2001) (based on MSS) to maximal four segments 
-//      (min(4*MSS, max (2*MSS, 4380 bytes))) (RFC 3390). integrated to 
-//      TCPBaseAlg (can be used for TCPNewReno, TCPReno, TCPTahoe and TCPNoCongestionControl 
+//   -# use the parameter (increasedIWEnabled) to change initial window
+//      from one segment (RFC 2001) (based on MSS) to maximal four segments
+//      (min(4*MSS, max (2*MSS, 4380 bytes))) (RFC 3390). integrated to
+//      TCPBaseAlg (can be used for TCPNewReno, TCPReno, TCPTahoe and TCPNoCongestionControl
 //      but not for DumbTCP).
 //
 // The \TCP flavour supported depends on the value of the tcpAlgorithmClass
@@ -146,11 +146,11 @@ package inet.transport.tcp;
 //    to the user
 //  - CONN-ESTAB timer, SYN-REXMIT timer, 2MSL timer, FIN-WAIT-2 timer
 //  - The basic SACK implementation (RFC 2018 and RFC 2883) is located in
-//    TCP main (and not in flavours). 
-//    This means that all existing TCP algorithm classes may be used with 
+//    TCP main (and not in flavours).
+//    This means that all existing TCP algorithm classes may be used with
 //    SACK, although currently only TCPReno makes sense.
-//  - RFC 3517 - (SACK)-based Loss Recovery algorithm which is a conservative 
-//    replacement of the fast recovery algorithm (RFC2581) integrated to 
+//  - RFC 3517 - (SACK)-based Loss Recovery algorithm which is a conservative
+//    replacement of the fast recovery algorithm (RFC2581) integrated to
 //    TCPReno but not to TCPNewReno, TCPTahoe, TCPNoCongestionControl and DumbTCP.
 //  - changes from RFC 2001 to RFC 2581:
 //      - ACK generation (ack_now = true) RFC 2581, page 6: "(...) a TCP receiver SHOULD send an immediate ACK
@@ -176,13 +176,13 @@ package inet.transport.tcp;
 //  - Jacobson's and Karn's algorithms for round-trip time measurement and
 //    adaptive retransmission
 //  - \TCPTahoe (Fast Retransmit), \TCPReno (Fast Retransmit and Fast Recovery), \TCPNewReno (Fast Retransmit and Fast Recovery)
-//  - A module parameter (increasedIWEnabled) to change initial window from one 
-//    segment (RFC 2001) (based on MSS) to maximal four segments 
-//    (min(4*MSS, max (2*MSS, 4380 bytes))) (RFC 3390). Integrated to TCPBaseAlg 
+//  - A module parameter (increasedIWEnabled) to change initial window from one
+//    segment (RFC 2001) (based on MSS) to maximal four segments
+//    (min(4*MSS, max (2*MSS, 4380 bytes))) (RFC 3390). Integrated to TCPBaseAlg
 //    (can be used for TCPNewReno, TCPReno, TCPTahoe and TCPNoCongestionControl but not
 //    for DumbTCP).
-//  - RFC 3042 - Limited Transmit algorithm. Integrated to TCPBaseAlg 
-//    (can be used for TCPNewReno, TCPReno, TCPTahoe and TCPNoCongestionControl but not 
+//  - RFC 3042 - Limited Transmit algorithm. Integrated to TCPBaseAlg
+//    (can be used for TCPNewReno, TCPReno, TCPTahoe and TCPNoCongestionControl but not
 //    for DumbTCP).
 //
 // Missing bits:
@@ -206,10 +206,10 @@ package inet.transport.tcp;
 //  - KEEPALIVE not implemented (idle connections never time out)
 //  - Nagle's algorithm possibly not precisely implemented
 //  - Re-starting Idle Connections (RFC 2581)
-//	   RFC 2581, pages 7 and 8: "When TCP has not received a segment for
-//	   more than one retransmission timeout, cwnd is reduced to the value
-//	   of the restart window (RW) before transmission begins.
-//	   For the purposes of this standard, we define RW = IW."
+//      RFC 2581, pages 7 and 8: "When TCP has not received a segment for
+//      more than one retransmission timeout, cwnd is reduced to the value
+//      of the restart window (RW) before transmission begins.
+//      For the purposes of this standard, we define RW = IW."
 //
 // The above problems are relatively easy to fix, and will be resolved in the
 // next iteration. Also, other TCPAlgorithms will be added.

@@ -26,6 +26,7 @@ IPv6ControlInfo::~IPv6ControlInfo()
     	delete dgram;
     }
 }
+
 void IPv6ControlInfo::setOrigDatagram(IPv6Datagram *d)
 {
     if (dgram)

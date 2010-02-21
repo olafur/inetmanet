@@ -79,7 +79,7 @@ void AbstractQueue::doEndService()
     }
     else
     {
-        msgServiced = PK(queue.pop());
+        msgServiced = queue.pop();
         doStartService();
     }
 }

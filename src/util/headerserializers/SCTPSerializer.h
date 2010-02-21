@@ -27,7 +27,7 @@ class SCTPSerializer
 {
     public:
         SCTPSerializer() {}
-	
+
         /**
          * Serializes an SCTPMessage for transmission on the wire.
          * The checksum is NOT filled in. (The kernel does that when sending
@@ -37,7 +37,7 @@ class SCTPSerializer
         int32 serialize(const SCTPMessage *msg, uint8 *buf, uint32 bufsize);
 
         /**
-         * Puts a packet sniffed from the wire into an SCTPMessage. 
+         * Puts a packet sniffed from the wire into an SCTPMessage.
          */
         void parse(const uint8 *buf, uint32 bufsize, SCTPMessage *dest);
 

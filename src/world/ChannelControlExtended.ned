@@ -51,5 +51,6 @@ simple ChannelControlExtended
         int numChannels = default(1); // number of radio channels (frequencies)
         string propagationModel = default("PathLossReceptionModel") @enum("","PathLossReceptionModel","TwoRayGroundModel","RiceModel","RayleighModel","NakagamiModel","FreeSpaceModel","LogNormalShadowingModel");
         @display("i=misc/cloud");
+        @labels(node);
 }
 

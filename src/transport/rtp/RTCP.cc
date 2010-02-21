@@ -203,24 +203,24 @@ void RTCP::createSocket()
     // TODO UDPAppBase should be ported to use UDPSocket sometime, but for now
     // we just manage the UDP socket by hand...
     if (_socketFdIn == -1) {
-    _socketFdIn = UDPSocket::generateSocketId();
-    UDPControlInfo *ctrl = new UDPControlInfo();
-    IPAddress ipaddr(_destinationAddress);
+        _socketFdIn = UDPSocket::generateSocketId();
+        UDPControlInfo *ctrl = new UDPControlInfo();
+        IPAddress ipaddr(_destinationAddress);
 
-    if (ipaddr.isMulticast()) {
-        ctrl->setSrcAddr(IPAddress(_destinationAddress));
-        ctrl->setSrcPort(_port);
-    }
-    else {
-         ctrl->setSrcPort(_port);
-         ctrl->setSockId(_socketFdOut);
-    }
-    ctrl->setSockId((int)_socketFdIn);
-    cMessage *msg = new cMessage("UDP_C_BIND", UDP_C_BIND);
-    msg->setControlInfo(ctrl);
+        if (ipaddr.isMulticast()) {
+            ctrl->setSrcAddr(IPAddress(_destinationAddress));
+            ctrl->setSrcPort(_port);
+        }
+        else {
+             ctrl->setSrcPort(_port);
+             ctrl->setSockId(_socketFdOut);
+        }
+        ctrl->setSockId((int)_socketFdIn);
+        cMessage *msg = new cMessage("UDP_C_BIND", UDP_C_BIND);
+        msg->setControlInfo(ctrl);
         send(msg,"udpOut");
 
-    connectRet();
+        connectRet();
     }
 }
 
@@ -294,7 +294,7 @@ void RTCP::createPacket()
                 _participantInfos->remove(participantInfo);
                 delete participantInfo;
                 // perhaps inform the profile
-        }
+            }
         }
     }
     // insert source description items (at least common name)

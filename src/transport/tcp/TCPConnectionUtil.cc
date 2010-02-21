@@ -519,9 +519,9 @@ void TCPConnection::sendSegment(uint32 bytes)
         state->snd_nxt = state->snd_nxt + forward;
     }
 
-        ulong buffered = sendQueue->getBytesAvailable(state->snd_nxt);
+    ulong buffered = sendQueue->getBytesAvailable(state->snd_nxt);
     if (bytes > buffered) { // last segment?
-            bytes = buffered; 
+        bytes = buffered;
     }
 
     // send one segment of 'bytes' bytes from snd_nxt, and advance snd_nxt
@@ -627,7 +627,7 @@ bool TCPConnection::sendData(bool fullSegmentsOnly, uint32 congestionWindow) // 
             bytesToSend -= state->snd_mss;
         }
         // check how many bytes we have - last packet could be less then state->snd_mss
-		buffered = sendQueue->getBytesAvailable(state->snd_nxt);
+        buffered = sendQueue->getBytesAvailable(state->snd_nxt);
         if (bytesToSend==buffered) // last packet
             sendSegment(bytesToSend);
         else if (bytesToSend>0)

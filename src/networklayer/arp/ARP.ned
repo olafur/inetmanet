@@ -44,6 +44,6 @@ simple ARP
         bool globalARP = default(false);
         @display("i=block/layer");
     gates:
-        input ipIn;
-        output nicOut[];
+        input ipIn @labels(ARPPacket,IPDatagram);
+        output nicOut[] @labels(ARPPacket);
 }

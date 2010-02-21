@@ -42,7 +42,7 @@ struct pcap_hdr {
 
 /* "libpcap" record header. */
 struct pcaprec_hdr {
-    int32           ts_sec;     /* timestamp seconds */
+    int32   ts_sec;     /* timestamp seconds */
     uint32  ts_usec;    /* timestamp microseconds */
     uint32  incl_len;   /* number of octets of packet saved in file */
     uint32  orig_len;   /* actual length of packet */

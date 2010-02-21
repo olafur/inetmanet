@@ -38,6 +38,7 @@ module StandardHost6
 {
     parameters:
         @node();
+        @labels(node,ethernet-node);
         int numTcpApps = default(0);
         int numUdpApps = default(0);
         string tcpAppType = default("");
@@ -45,8 +46,8 @@ module StandardHost6
         string tcpType = default("TCP");  // tcp implementation (e.g. TCP, TCP_old, TCP_NSC)
         @display("i=device/laptop");
     gates:
-        inout pppg[];
-        inout ethg[];
+        inout pppg[] @labels(PPPFrame-conn);
+        inout ethg[] @labels(EtherFrame-conn);
     submodules:
         notificationBoard: NotificationBoard {
             parameters:
@@ -103,7 +104,7 @@ module StandardHost6
         }
 
         tcp.ipv6Out --> networkLayer.tcpIn;
-        tcp.ipv6In <-- networkLayer.TCPOut;
+        tcp.ipv6In <-- networkLayer.tcpOut;
 
         for i=0..numUdpApps-1 {
             udpApp[i].udpOut --> udp.appIn++;

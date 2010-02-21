@@ -56,9 +56,9 @@ int ICMPSerializer::serialize(const ICMPMessage *pkt, unsigned char *buf, unsign
             unsigned int datalen = (pp->getByteLength() - 4);
             for (unsigned int i=0; i < datalen; i++)
                 if (i < pp->getDataArraySize()) {
-                	icmp->icmp_data[i] = pp->getData(i);
+                    icmp->icmp_data[i] = pp->getData(i);
                 } else {
-                	icmp->icmp_data[i] = 'a';
+                    icmp->icmp_data[i] = 'a';
                 }
             packetLength += datalen;
             break;
