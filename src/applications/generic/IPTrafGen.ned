@@ -55,6 +55,7 @@ simple IPTrafGen like IPTrafficGenerator
         int protocol; // value for IPDatagram protocol field
         volatile int packetLength @unit("B"); // in bytes (changed 2005-11-04)
         string destAddresses = default(""); // list of \IP addresses, separated by spaces
+        int    defaultBroadCastAddressInterface=default(101);
         @display("i=block/source");
     gates:
         input ipIn @labels(IPControlInfo/up);

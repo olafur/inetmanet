@@ -110,6 +110,7 @@ void IPTrafGen::initialize(int stage)
         destAddresses.push_back(IPAddressResolver().resolve(token));
 
     counter = 0;
+    outputInterfaceId = par("defaultBroadCastAddressInterface");
 
     numSent = 0;
     WATCH(numSent);
@@ -144,6 +145,8 @@ void IPTrafGen::sendPacket()
         IPControlInfo *controlInfo = new IPControlInfo();
         controlInfo->setDestAddr(destAddr.get4());
         controlInfo->setProtocol(protocol);
+        if (controlInfo->getDestAddr()== IPAddress::ALLONES_ADDRESS)
+        	controlInfo->setInterfaceId(outputInterfaceId);
         payload->setControlInfo(controlInfo);
 
         EV << "Sending packet: ";

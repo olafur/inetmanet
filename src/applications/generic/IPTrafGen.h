@@ -53,6 +53,7 @@ class INET_API IPTrafGen : public IPTrafSink
     int protocol;
     int msgByteLength;
     int numPackets;
+    int outputInterfaceId;
     std::vector<IPvXAddress> destAddresses;
 
     static int counter; // counter for generating a global number for each packet
