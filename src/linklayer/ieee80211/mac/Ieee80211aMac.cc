@@ -152,6 +152,9 @@ void Ieee80211aMac::initialize(int stage)
         }
         EV<<" bitrate="<<bitrate/1e6<<"M IDLE="<<IDLE<<" RECEIVE="<<RECEIVE<<endl;
 
+        PHY_HEADER_LENGTH_G=par("PHY_HEADER_LENGTH");
+    	if (PHY_HEADER_LENGTH_G<0)
+    		PHY_HEADER_LENGTH_G=26e-6;//26us
 
         //basicBitrate = 2e6; //FIXME make it parameter
         basicBitrate = par("basicBitrate");

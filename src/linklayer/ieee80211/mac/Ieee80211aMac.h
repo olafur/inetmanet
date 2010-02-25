@@ -85,6 +85,7 @@ class INET_API Ieee80211aMac : public WirelessMacBase, public INotifiable
     //@{
     /** MAC address */
     MACAddress address;
+    double PHY_HEADER_LENGTH_G;
 
     char opMode;
     short int AIFSN;

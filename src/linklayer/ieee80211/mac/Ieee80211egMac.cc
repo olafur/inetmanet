@@ -114,7 +114,9 @@ void Ieee80211egMac::initialize(int stage)
 
         if(opMode=='g')
         {//added by sorin
-        	PHY_HEADER_LENGTH=26e-6;//26us
+        	PHY_HEADER_LENGTH=par("PHY_HEADER_LENGTH");//26us
+        	if (PHY_HEADER_LENGTH<0)
+        		PHY_HEADER_LENGTH=26e-6;//26us
         }
         else{
         	opMode='b';//802.11b

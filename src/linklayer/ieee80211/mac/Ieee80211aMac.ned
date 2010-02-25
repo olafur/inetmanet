@@ -79,6 +79,7 @@ simple Ieee80211aMac
         int autoBitrate = default(0);// 0 no auto, 1 ARF, 2 AARF
         int mtu = default(1500);
         bool fixFSM = default(false);
+        double PHY_HEADER_LENGTH = default(-1);// if negative the code use 26 usec 
         @display("i=block/layer");
     gates:
         input uppergateIn @labels(Ieee80211Frame);

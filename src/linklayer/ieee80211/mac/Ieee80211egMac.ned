@@ -77,6 +77,7 @@ simple Ieee80211egMac
         int cwMaxData = default(-1); // contention window for normal data frames, -1 means default
         int cwMinBroadcast = default(-1); // contention window for broadcast messages, -1 means default
         bool fixFSM = default(false);
+        double PHY_HEADER_LENGTH = default(-1);// if negative the code use 26 usec
         @display("i=block/layer");
     gates:
         input uppergateIn @labels(Ieee80211Frame);
