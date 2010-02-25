@@ -120,7 +120,10 @@ void IPTrafGen::initialize(int stage)
 
     if (numPackets > 0) {
         cMessage *timer = new cMessage("sendTimer");
-        scheduleAt(startTime, timer);
+        if (simTime()<startTime)
+        	scheduleAt(startTime, timer);
+        else
+        	scheduleAt(simTime(), timer);
     }
 }
 
