@@ -34,38 +34,31 @@ TraCIScenarioManager::~TraCIScenarioManager()
 
 void TraCIScenarioManager::initialize()
 {
-  debug = par("debug");
-  updateInterval = par("updateInterval");
-  moduleType = par("moduleType").stdstringValue();
-  moduleName = par("moduleName").stdstringValue();
-  moduleDisplayString = par("moduleDisplayString").stdstringValue();
-  host = par("host").stdstringValue();
-  port = par("port");
-  autoShutdown = par("autoShutdown");
-  margin = par("margin");
+	debug = par("debug");
+	updateInterval = par("updateInterval");
+	moduleType = par("moduleType").stdstringValue();
+	moduleName = par("moduleName").stdstringValue();
+	moduleDisplayString = par("moduleDisplayString").stdstringValue();
+	host = par("host").stdstringValue();
+	port = par("port");
+	autoShutdown = par("autoShutdown");
+	margin = par("margin");
 
-  packetNo = 0;
+	executeOneTimestepTrigger = new cMessage("step");
+	scheduleAt(0, executeOneTimestepTrigger);
 
-  traCISimulationEnded = false;
-  executeOneTimestepTrigger = new cMessage("step");
-  scheduleAt(0, executeOneTimestepTrigger);
+	cc = dynamic_cast<ChannelControl *>(simulation.getModuleByPath("channelcontrol"));
+	if (cc == 0) error("Could not find a ChannelControl module named channelcontrol");
 
-  cc = dynamic_cast<ChannelControl *>(simulation.getModuleByPath("channelcontrol"));
-  if (cc == 0) error("Could not find a ChannelControl module named channelcontrol");
+	if (debug) EV << "TraCIScenarioManager connecting to TraCI server" << endl;
+	socket = -1;
+	connect();
+	init_traci();
 
-  statsSimStart = time(NULL);
-  currStep = 0;
-
-  if (debug) EV << "TraCIScenarioManager connecting to TraCI server" << endl;
-  socket = -1;
-  connect();
-  init_traci();
-
-  if (debug) EV << "initialized TraCIScenarioManager" << endl;
+	if (debug) EV << "initialized TraCIScenarioManager" << endl;
 }
 
 std::string TraCIScenarioManager::receiveTraCIMessage() {
-	if(traCISimulationEnded) error("Simulation has ended");
 	if (socket < 0) error("Connection to TraCI server lost");
 
 	uint32_t msgLength;
@@ -105,7 +98,6 @@ std::string TraCIScenarioManager::receiveTraCIMessage() {
 }
 
 void TraCIScenarioManager::sendTraCIMessage(std::string buf) {
-	if(traCISimulationEnded) error("Simulation has ended");
 	if (socket < 0) error("Connection to TraCI server lost");
 
 	{
@@ -178,6 +170,31 @@ void TraCIScenarioManager::connect() {
 void TraCIScenarioManager::init_traci() {
 	{
 		// Send "Subscribe Lifecycles" Command
+		uint8_t do_write = 0x00;
+		uint8_t domain = DOM_ROADMAP;
+		uint32_t objectId = 0;
+		uint8_t variableId = DOMVAR_BOUNDINGBOX;
+		uint8_t typeId = TYPE_BOUNDINGBOX;
+		TraCIBuffer buf = queryTraCI(CMD_SCENARIO, TraCIBuffer() << do_write << domain << objectId << variableId << typeId);
+		uint8_t cmdLength_resp; buf >> cmdLength_resp;
+		uint8_t commandId_resp; buf >> commandId_resp; if (commandId_resp != CMD_SCENARIO) error("Expected response to CMD_SCENARIO, but got %d", commandId_resp);
+		uint8_t do_write_resp; buf >> do_write_resp;
+		uint8_t domain_resp; buf >> domain_resp;
+		uint32_t objectId_resp; buf >> objectId_resp;
+		uint8_t variableId_resp; buf >> variableId_resp;
+		uint8_t typeId_resp; buf >> typeId_resp;
+		float x1; buf >> x1;
+		float y1; buf >> y1;
+		float x2; buf >> x2;
+		float y2; buf >> y2;
+		netbounds1 = Coord(x1, y1);
+		netbounds2 = Coord(x2, y2);
+		if (debug) EV << "TraCI reports network boundaries (" << x1 << ", " << y1 << ")-(" << x2 << ", " << y2 << ")" << endl;
+		if ((traci2omnet(netbounds2).x > cc->getPgs()->x) || (traci2omnet(netbounds2).y > cc->getPgs()->y)) EV << "WARNING: Playground size (" << cc->getPgs()->x << ", " << cc->getPgs()->y << ") might be too small for vehicle at network bounds (" << traci2omnet(netbounds2).x << ", " << traci2omnet(netbounds2).y << ")" << endl;
+	}
+
+	{
+		// Send "Subscribe Lifecycles" Command
 		uint8_t domain = DOM_VEHICLE;
 		TraCIBuffer buf = queryTraCI(CMD_SUBSCRIBELIFECYCLES, TraCIBuffer() << domain);
 		if (!buf.eof()) error("expected only an OK response, but received additional bytes");
@@ -217,6 +234,9 @@ void TraCIScenarioManager::finish()
 		::close(socket);
 		socket = -1;
 	}
+	while (hosts.begin() != hosts.end()) {
+		deleteModule(hosts.begin()->first);
+	}	
 }
 
 void TraCIScenarioManager::handleMessage(cMessage *msg)
@@ -235,15 +255,6 @@ void TraCIScenarioManager::handleSelfMsg(cMessage *msg)
 		return;
 	}
 	error("TraCIScenarioManager received unknown self-message");
-}
-
-cModule* TraCIScenarioManager::getManagedModule(int32_t nodeId) {
-		if (hosts.find(nodeId) == hosts.end()) return 0;
-		return hosts[nodeId];
-}
-
-bool TraCIScenarioManager::isTraCISimulationEnded() const {
-	return traCISimulationEnded;
 }
 
 void TraCIScenarioManager::commandSetMaximumSpeed(int32_t nodeId, float maxSpeed) {
@@ -310,10 +321,10 @@ void TraCIScenarioManager::commandSetTrafficLightPhaseIndex(std::string trafficL
 }
 
 // name: host;Car;i=vehicle.gif
-void TraCIScenarioManager::addModule(int32_t nodeId, std::string type, std::string name, std::string displayString) {
+void TraCIScenarioManager::addModule(int32_t nodeId, std::string type, std::string name, std::string displayString, const Coord& position, std::string road_id, double speed, double angle, double allowed_speed) {
 	if (hosts.find(nodeId) != hosts.end()) error("tried adding duplicate module");
 
-	uint32_t nodeVectorIndex = nodeId;
+	int32_t nodeVectorIndex = nodeId;
 
 	cModule* parentmod = getParentModule();
 	if (!parentmod) error("Parent Module not found");
@@ -327,30 +338,25 @@ void TraCIScenarioManager::addModule(int32_t nodeId, std::string type, std::stri
 	mod->getDisplayString().parse(displayString.c_str());
 	mod->buildInside();
 	mod->scheduleStart(simTime()+updateInterval);
-	mod->callInitialize();
-	hosts[nodeId] = mod;
-}
 
-void TraCIScenarioManager::processObjectCreation(uint8_t domain, int32_t nodeId) {
-	if (domain != DOM_VEHICLE) error("Expected DOM_VEHICLE, but got %d", domain);
-
-	cModule* mod = getManagedModule(nodeId);
-	if (mod) error("Tried adding duplicate vehicle with Id %d", nodeId);
-
-	addModule(nodeId, moduleType, moduleName, moduleDisplayString);
-	mod = getManagedModule(nodeId);
+	// pre-initialize TraCIMobility
 	for (cModule::SubmoduleIterator iter(mod); !iter.end(); iter++) {
 		cModule* submod = iter();
 		TraCIMobility* mm = dynamic_cast<TraCIMobility*>(submod);
 		if (!mm) continue;
-		mm->setExternalId(nodeId);
+		mm->preInitialize(nodeId, position, road_id, speed, angle, allowed_speed);
 	}
-	if (debug) EV << "Added vehicle #" << nodeId << endl;
+
+	mod->callInitialize();
+	hosts[nodeId] = mod;
 }
 
-void TraCIScenarioManager::processObjectDestruction(uint8_t domain, int32_t nodeId) {
-	if (domain != DOM_VEHICLE) error("Expected DOM_VEHICLE, but got %d", domain);
+cModule* TraCIScenarioManager::getManagedModule(int32_t nodeId) {
+		if (hosts.find(nodeId) == hosts.end()) return 0;
+		return hosts[nodeId];
+}
 
+void TraCIScenarioManager::deleteModule(int32_t nodeId) {
 	cModule* mod = getManagedModule(nodeId);
 	if (!mod) error("no vehicle with Id %d found", nodeId);
 
@@ -360,6 +366,27 @@ void TraCIScenarioManager::processObjectDestruction(uint8_t domain, int32_t node
 	hosts.erase(nodeId);
 	mod->callFinish();
 	mod->deleteModule();
+}
+
+bool TraCIScenarioManager::isInRegionOfInterest(const Coord& position, std::string road_id, double speed, double angle, double allowed_speed) {
+	return true;
+}
+
+void TraCIScenarioManager::processObjectCreation(uint8_t domain, int32_t nodeId) {
+	if (domain != DOM_VEHICLE) error("Expected DOM_VEHICLE, but got %d", domain);
+
+	// actual object creation is done in processUpdateObject
+}
+
+void TraCIScenarioManager::processObjectDestruction(uint8_t domain, int32_t nodeId) {
+	if (domain != DOM_VEHICLE) error("Expected DOM_VEHICLE, but got %d", domain);
+
+	// check if this object has been deleted already (e.g. because it was outside the ROI)
+	cModule* mod = getManagedModule(nodeId);
+	if (!mod) return;
+
+	deleteModule(nodeId);
+
 	if (debug) EV << "Removed vehicle #" << nodeId << endl;
 }
 
@@ -370,29 +397,43 @@ void TraCIScenarioManager::processUpdateObject(uint8_t domain, int32_t nodeId, T
 
 	float px; buf >> px;
 	float py; buf >> py;
-	Coord p = traci2omnet(Coord(px, py)); px = p.x; py = p.y;
-	int pxi = static_cast<int>(px);
-	int pyi = static_cast<int>(py);
-	if ((pxi < 0) || (pyi < 0)) error("received bad node position");
+	Coord p = traci2omnet(Coord(px, py));
+	if ((p.x < 0) || (p.y < 0)) error("received bad node position (%.2f, %.2f), translated to (%.2f, %.2f)", px, py, p.x, p.y);
 
 	std::string edge; buf >> edge;
 
 	float speed; buf >> speed;
 
-	float angle; buf >> angle;
+	float angle_traci; buf >> angle_traci;
+	float angle = traci2omnetAngle(angle_traci);
 
 	float allowed_speed; buf >> allowed_speed;
 
 	cModule* mod = getManagedModule(nodeId);
 
-	if (!mod) error("Vehicle #%d not found", nodeId);
+	// is it in the ROI?
+	bool inRoi = isInRegionOfInterest(p, edge, speed, angle, allowed_speed);
+	if (!inRoi) {
+		if (mod) {
+			deleteModule(nodeId);
+			if (debug) EV << "Vehicle #" << nodeId << " left region of interest" << endl;
+		}
+		return;
+	}
 
-	for (cModule::SubmoduleIterator iter(mod); !iter.end(); iter++) {
-		cModule* submod = iter();
-		TraCIMobility* mm = dynamic_cast<TraCIMobility*>(submod);
-		if (!mm) continue;
-		if (debug) EV << "module " << nodeId << " moving to " << pxi << "," << pyi << endl;
-		mm->nextPosition(pxi, pyi, edge, speed, angle * M_PI / 180.0, allowed_speed);
+	if (!mod) {
+		// no such module - need to create
+		addModule(nodeId, moduleType, moduleName, moduleDisplayString, p, edge, speed, angle, allowed_speed);
+		if (debug) EV << "Added vehicle #" << nodeId << endl;
+	} else {
+		// module existed - update position
+		for (cModule::SubmoduleIterator iter(mod); !iter.end(); iter++) {
+			cModule* submod = iter();
+			TraCIMobility* mm = dynamic_cast<TraCIMobility*>(submod);
+			if (!mm) continue;
+			if (debug) EV << "module " << nodeId << " moving to " << p.x << "," << p.y << endl;
+			mm->nextPosition(p, edge, speed, angle, allowed_speed);
+		}
 	}
 }
 
@@ -435,11 +476,41 @@ void TraCIScenarioManager::executeOneTimestep() {
 }
 
 Coord TraCIScenarioManager::traci2omnet(Coord coord) const {
-	return Coord(coord.x + margin, cc->getPgs()->y - (coord.y + margin));
+	return Coord(coord.x - netbounds1.x + margin, (netbounds2.y - netbounds1.y) - (coord.y - netbounds1.y) + margin);
 }
 
 Coord TraCIScenarioManager::omnet2traci(Coord coord) const {
-	return Coord(coord.x - margin, cc->getPgs()->y - (coord.y + margin));
+	return Coord(coord.x + netbounds1.x - margin, (netbounds2.y - netbounds1.y) - (coord.y - netbounds1.y) + margin);
+}
+
+double TraCIScenarioManager::traci2omnetAngle(double angle) const {
+
+	// convert to rad	
+	angle = angle * M_PI / 180.0;
+
+	// rotate angle so 0 is east (in TraCI's angle interpretation 0 is south)
+	angle = 1.5*M_PI - angle; 
+
+	// normalize angle to -M_PI <= angle < M_PI
+	while (angle < -M_PI) angle += 2*M_PI;
+	while (angle >= M_PI) angle -= 2*M_PI;
+
+	return angle;
+}
+
+double TraCIScenarioManager::omnet2traciAngle(double angle) const {
+
+	// rotate angle so 0 is south (in OMNeT++'s angle interpretation 0 is east)
+	angle = 1.5*M_PI - angle; 
+
+	// convert to degrees
+	angle = angle * 180 / M_PI;
+
+	// normalize angle to 0 <= angle < 360
+	while (angle < 0) angle += 360;
+	while (angle >= 360) angle -= 360;
+
+	return angle;
 }
 
 template<> void TraCIScenarioManager::TraCIBuffer::write(std::string inv) {

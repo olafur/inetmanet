@@ -17,8 +17,8 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 
-#ifndef TRACISCENARIOMANAGER_H
-#define TRACISCENARIOMANAGER_H
+#ifndef WORLD_TRACI_TRACISCENARIOMANAGER_H
+#define WORLD_TRACI_TRACISCENARIOMANAGER_H
 
 #include <fstream>
 #include <vector>
@@ -53,12 +53,11 @@ class INET_API TraCIScenarioManager : public cSimpleModule
 {
   public:
 
-    ~TraCIScenarioManager();
-    virtual void initialize();
-    virtual void finish();
-    virtual void handleMessage(cMessage *msg);
-    virtual void handleSelfMsg(cMessage *msg);
-    virtual bool isTraCISimulationEnded  () const;
+		~TraCIScenarioManager();
+		virtual void initialize();
+		virtual void finish();
+		virtual void handleMessage(cMessage *msg);
+		virtual void handleSelfMsg(cMessage *msg);
 
     void commandSetMaximumSpeed(int32_t nodeId, float maxSpeed);
     void commandChangeRoute(int32_t nodeId, std::string roadId, double travelTime);
@@ -79,25 +78,29 @@ class INET_API TraCIScenarioManager : public cSimpleModule
     bool autoShutdown; /**< Shutdown module as soon as no more vehicles are in the simulation */
     int margin;
 
-    int socket;
-    long statsSimStart;
-    int currStep;
+		int socket;
+		Coord netbounds1; /* network boundaries as reported by TraCI (x1, y1) */
+		Coord netbounds2; /* network boundaries as reported by TraCI (x2, y2) */
 
-    bool traCISimulationEnded;
-    int packetNo; /**< current packet number (for debugging) */
-    std::map<int32_t, cModule*> hosts; /**< vector of all hosts managed by us */
-    std::map<int32_t, simtime_t> lastUpdate; /**< vector of all hosts' last update time */
-    cMessage* executeOneTimestepTrigger; /**< self-message scheduled for when to next call executeOneTimestep */
+		std::map<int32_t, cModule*> hosts; /**< vector of all hosts managed by us */
+		cMessage* executeOneTimestepTrigger; /**< self-message scheduled for when to next call executeOneTimestep */
 
     ChannelControl* cc;
 
     void executeOneTimestep(); /**< read and execute all commands for the next timestep */
 
-    cModule* getManagedModule(int32_t nodeId); /**< returns a pointer to the managed module named moduleName, or 0 if no module can be found */
+		void connect();
+		virtual void init_traci();
 
-    void connect();
-    virtual void init_traci();
-    void addModule(int32_t nodeId, std::string type, std::string name, std::string displayString);
+		void addModule(int32_t nodeId, std::string type, std::string name, std::string displayString, const Coord& position, std::string road_id = "", double speed = -1, double angle = -1, double allowed_speed = -1);
+		cModule* getManagedModule(int32_t nodeId); /**< returns a pointer to the managed module named moduleName, or 0 if no module can be found */
+		void deleteModule(int32_t nodeId);
+
+		/**
+		 * returns whether a given position lies within the simulation's region of interest.
+		 * Modules are destroyed and re-created as managed vehicles leave and re-enter the ROI
+		 */
+		bool isInRegionOfInterest(const Coord& position, std::string road_id, double speed, double angle, double allowed_speed);
 
     /**
      * Byte-buffer that stores values in TraCI byte-order
@@ -217,10 +220,21 @@ class INET_API TraCIScenarioManager : public cSimpleModule
      */
     Coord traci2omnet(Coord coord) const;
 
-    /**
-     * convert OMNeT++ coordinates to TraCI coordinates
-     */
-    Coord omnet2traci(Coord coord) const;
+		/**
+		 * convert OMNeT++ coordinates to TraCI coordinates
+		 */
+		Coord omnet2traci(Coord coord) const;
+
+		/**
+		 * convert TraCI angle to OMNeT++ angle (in rad)
+		 */
+		double traci2omnetAngle(double angle) const;
+
+		/**
+		 * convert OMNeT++ angle (in rad) to TraCI angle
+		 */
+		double omnet2traciAngle(double angle) const;
+
 };
 
 template<> void TraCIScenarioManager::TraCIBuffer::write(std::string inv);

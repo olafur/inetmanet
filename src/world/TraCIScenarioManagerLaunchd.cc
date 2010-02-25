@@ -34,40 +34,41 @@ TraCIScenarioManagerLaunchd::~TraCIScenarioManagerLaunchd()
  
 void TraCIScenarioManagerLaunchd::initialize()
 {
-  launchConfig = par("launchConfig").xmlValue();
-  cXMLElementList basedir_nodes = launchConfig->getElementsByTagName("basedir");
-  if (basedir_nodes.size() == 0) {
-    // default basedir is where current network file was loaded from
-    std::string basedir = cSimulation::getActiveSimulation()->getEnvir()->getConfig()->getConfigEntry("network").getBaseDirectory();
-    cXMLElement* basedir_node = new cXMLElement("basedir", __FILE__, launchConfig);
-    basedir_node->setAttribute("path", basedir.c_str());
-    launchConfig->appendChild(basedir_node);
-  }
-  TraCIScenarioManager::initialize();
+	launchConfig = par("launchConfig").xmlValue();
+	cXMLElementList basedir_nodes = launchConfig->getElementsByTagName("basedir");
+	if (basedir_nodes.size() == 0) {
+		// default basedir is where current network file was loaded from
+		std::string basedir = cSimulation::getActiveSimulation()->getEnvir()->getConfig()->getConfigEntry("network").getBaseDirectory();
+		cXMLElement* basedir_node = new cXMLElement("basedir", __FILE__, launchConfig);
+		basedir_node->setAttribute("path", basedir.c_str());
+		launchConfig->appendChild(basedir_node);
+	}
+	TraCIScenarioManager::initialize();
 }
- 
+
 void TraCIScenarioManagerLaunchd::finish()
 {
-  TraCIScenarioManager::finish();
+	TraCIScenarioManager::finish();
 }
- 
+
 void TraCIScenarioManagerLaunchd::init_traci() {
- 
-  std::string contents = launchConfig->tostr(0);
- 
-  TraCIBuffer buf;
-  buf << std::string("sumo-launchd.launch.xml") << contents;
-  sendTraCIMessage(makeTraCICommand(CMD_FILE_SEND, buf));
- 
-  TraCIBuffer obuf(receiveTraCIMessage());
-  uint8_t cmdLength; obuf >> cmdLength;
-  uint8_t commandResp; obuf >> commandResp; if (commandResp != CMD_FILE_SEND) error("Expected response to command %d, but got one for command %d", CMD_FILE_SEND, commandResp);
-  uint8_t result; obuf >> result;
-  std::string description; obuf >> description;
-  if (result != RTYPE_OK) {
-    EV << "Warning: Received non-OK response from TraCI server to command " << CMD_FILE_SEND << ":" << description.c_str() << std::endl;
-  }
- 
-  TraCIScenarioManager::init_traci();
+
+	std::string contents = launchConfig->tostr(0);
+
+	TraCIBuffer buf;
+	buf << std::string("sumo-launchd.launch.xml") << contents;
+	sendTraCIMessage(makeTraCICommand(CMD_FILE_SEND, buf));
+
+	TraCIBuffer obuf(receiveTraCIMessage());
+	uint8_t cmdLength; obuf >> cmdLength;
+	uint8_t commandResp; obuf >> commandResp; if (commandResp != CMD_FILE_SEND) error("Expected response to command %d, but got one for command %d", CMD_FILE_SEND, commandResp);
+	uint8_t result; obuf >> result;
+	std::string description; obuf >> description;
+	if (result != RTYPE_OK) {
+		EV << "Warning: Received non-OK response from TraCI server to command " << CMD_FILE_SEND << ":" << description.c_str() << std::endl;
+	}
+
+	TraCIScenarioManager::init_traci();
 }
- 
+
+

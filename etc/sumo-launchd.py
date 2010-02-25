@@ -30,10 +30,10 @@ structure:
  
 <?xml version="1.0"?>
 <launch>
-<basedir path="/home/sommer/src/inet/examples/erlangen6" />
-<copy file="net.net.xml" />
-<copy file="routes.rou.xml" />
-<copy file="sumo.sumo.cfg" type="config" />
+  <basedir path="/home/sommer/src/inet/examples/erlangen6" />
+  <copy file="net.net.xml" />
+  <copy file="routes.rou.xml" />
+  <copy file="sumo.sumo.cfg" type="config" />
 </launch>
 """
  
@@ -83,8 +83,8 @@ class UnusedPortLock:
  
 def find_unused_port():
     """
-Return an unused port number.
-"""
+    Return an unused port number.
+    """
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     sock.bind(('127.0.0.1', 0))
     sock.listen(socket.SOMAXCONN)
@@ -95,8 +95,8 @@ Return an unused port number.
  
 def forward_connection(client_socket, server_socket, process):
     """
-Proxy connections until either socket runs out of data or process terminates.
-"""
+    Proxy connections until either socket runs out of data or process terminates.
+    """
  
     logging.debug("Starting proxy mode")
  
@@ -142,8 +142,8 @@ Proxy connections until either socket runs out of data or process terminates.
  
 def parse_launch_configuration(launch_xml_string):
     """
-Returns tuple of options set in launch configuration
-"""
+    Returns tuple of options set in launch configuration
+    """
     
     p = xml.dom.minidom.parseString(launch_xml_string)
     
@@ -170,8 +170,8 @@ Returns tuple of options set in launch configuration
  
 def run_sumo(runpath, sumo_command, config_file_name, remote_port, client_socket, unused_port_lock, keep_temp):
     """
-Actually run SUMO.
-"""
+    Actually run SUMO.
+    """
  
     # create log files
     sumoLogOut = open(os.path.join(runpath, 'sumo-launchd.out.log'), 'w')
@@ -284,8 +284,8 @@ Actually run SUMO.
  
 def copy_and_modify_files(basedir, copy_nodes, runpath, remote_port):
     """
-Copy (and modify) files, return config file name
-"""
+    Copy (and modify) files, return config file name
+    """
     
     config_file_name = None
     for copy_node in copy_nodes:
@@ -358,8 +358,8 @@ Copy (and modify) files, return config file name
  
 def handle_launch_configuration(sumo_command, launch_xml_string, client_socket, keep_temp):
     """
-Process launch configuration in launch_xml_string.
-"""
+    Process launch configuration in launch_xml_string.
+    """
  
     # create temporary directory
     logging.debug("Creating temporary directory...")
@@ -405,8 +405,8 @@ Process launch configuration in launch_xml_string.
  
 def read_launch_config(conn):
     """
-Read (and return) launch configuration from socket
-"""
+    Read (and return) launch configuration from socket
+    """
  
     # Get TraCI message length
     msg_len_buf = ""
@@ -466,8 +466,8 @@ Read (and return) launch configuration from socket
         
 def handle_connection(sumo_command, conn, addr, keep_temp):
     """
-Handle incoming connection.
-"""
+    Handle incoming connection.
+    """
  
     logging.debug("Handling connection from %s on port %d" % addr)
  
@@ -485,8 +485,8 @@ Handle incoming connection.
  
 def wait_for_connections(sumo_command, sumo_port, bind_address, do_daemonize, do_kill, pidfile, keep_temp):
     """
-Open TCP socket, wait for connections, call handle_connection for each
-"""
+    Open TCP socket, wait for connections, call handle_connection for each
+    """
    
     if do_kill:
         check_kill_daemon(pidfile)
@@ -542,8 +542,8 @@ def check_kill_daemon(pidfile):
  
 def daemonize(pidfile):
     """
-detach process, keep it running in the background
-"""
+    detach process, keep it running in the background
+    """
  
     # fork and exit parent process
     try:
@@ -589,8 +589,8 @@ detach process, keep it running in the background
  
 def main():
     """
-Program entry point when run interactively.
-"""
+    Program entry point when run interactively.
+    """
  
     # Option handling
     parser = OptionParser()
@@ -621,4 +621,3 @@ Program entry point when run interactively.
 # Start main() when run interactively
 if __name__ == '__main__':
     main()
- 
