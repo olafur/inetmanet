@@ -91,4 +91,3 @@ simple IPv6
         output ndOut;
 }
 
-
