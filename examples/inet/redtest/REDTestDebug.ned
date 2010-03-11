@@ -72,7 +72,7 @@ network REDTestDebug
         }
         dump: TCPDump {
             parameters:
-                @display("p=230,85");
+                @display("p=286,143");
         }
         th: ThruputMeter {
             parameters:
@@ -87,8 +87,8 @@ network REDTestDebug
 //        dump.ifOut++ --> {  datarate = 1.5Mbps; delay = 20ms; } --> r1.pppg$i++;
 //        dump.in2++ <-- {  datarate = 1.5Mbps; delay = 20ms; } <-- r2.pppg$o++;
 
-	r1.pppg++ <--> {  datarate = 1.5Mbps; delay = 20ms; } <--> r2.pppg++;
-     
+        r1.pppg++ <--> {  datarate = 1.5Mbps; delay = 20ms; } <--> r2.pppg++;
+
         s1.pppg++ <--> {  datarate = 10Mbps; delay = 2ms; } <--> r1.pppg++;
         s2.pppg++ <--> {  datarate = 10Mbps; delay = 3ms; } <--> r1.pppg++;
         s3.pppg++ <--> {  datarate = 10Mbps; delay = 4ms; } <--> r2.pppg++;
