@@ -23,7 +23,7 @@ simple Ieee80211Mesh
 {
     parameters:
         int frameCapacity = default(100);
-        bool useProactive= default(false);
+        bool useProactive= default(true);
         bool useReactive= default(true);
         bool UseLwMpls=default(false);
         bool ProactiveFeedback=default(true);
