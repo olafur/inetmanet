@@ -103,9 +103,11 @@ class INET_API TCPDump : public cSimpleModule
         TCPDumper tcpdump;
         unsigned int snaplen;
         unsigned long first, last, space;
+#if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
         pthread_mutex_t recordMutex;
         pthread_cond_t read;
         pthread_t tid;
+#endif
         volatile bool m_stoprequested;
         volatile bool m_running;
         void writeToBuffer(struct pcaprec_hdr* data1, uint32* data2,
