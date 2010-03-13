@@ -90,7 +90,28 @@ bool MyThroughputMeteringChannel::initializeChannel(int stage) {
 
 	return false;
 }
+#if OMNETPP_VERSION>0x0400
+void MyThroughputMeteringChannel::process(cMessage *msg, simtime_t t, result_t& result)
+{
+    cDatarateChannel::process(msg, t,result);
+    if (dynamic_cast<cPacket*>(msg)) {
+		// count packets and bits
+		numPackets++;
+		numBits += ((cPacket*)msg)->getBitLength();
 
+		// packet should be counted to new interval
+		if (intvlNumPackets >= batchSize || t-intvlStartTime >= maxInterval)
+			beginNewInterval(t);
+
+		intvlNumPackets++;
+		intvlNumBits += ((cPacket*)msg)->getBitLength();
+		intvlLastPkTime = t;
+
+		// update display string
+		updateDisplay();
+    }
+}
+#else
 bool MyThroughputMeteringChannel::deliver(cMessage *msg, simtime_t t)
 {
     bool ret = cDatarateChannel::deliver(msg, t);
@@ -113,6 +134,7 @@ bool MyThroughputMeteringChannel::deliver(cMessage *msg, simtime_t t)
     }
     return ret;
 }
+#endif
 
 void MyThroughputMeteringChannel::beginNewInterval(simtime_t now) {
     simtime_t duration = now - intvlStartTime;
