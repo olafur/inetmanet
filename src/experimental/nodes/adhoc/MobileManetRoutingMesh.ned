@@ -23,6 +23,7 @@ import inet.applications.pingapp.PingApp;
 import inet.applications.tcpapp.TCPApp;
 import inet.applications.udpapp.UDPApp;
 import inet.base.NotificationBoard;
+import inet.base.MMapBoard;
 import inet.mobility.BasicMobility;
 import inet.experimental.linklayer.ieee80211.Ieee80211NicMesh;
 import inet.experimental.linklayer.ieee80211.Ieee80211aNicMesh;
@@ -58,7 +59,7 @@ module MobileManetRoutingMesh
     submodules:
 
 
-       notificationBoard: NotificationBoard {
+        notificationBoard: NotificationBoard {
             parameters:
                 @display("p=60,70");
         }
@@ -96,13 +97,13 @@ module MobileManetRoutingMesh
         networkLayer: NetworkLayerGlobalArp {
             parameters:
                 proxyARP = false;
-		globalARP = true;
+                globalARP = true;
                 @display("p=248,247;q=queue");
             gates:
                 ifIn[1];
                 ifOut[1];
         }
-// the name of radio interface must have "wlan", valid examples wlan, wlan802, localwlan ....
+        // the name of radio interface must have "wlan", valid examples wlan, wlan802, localwlan ....
         wlan: Ieee80211gNicMesh {
             parameters:
                 @display("p=248,349;q=queue");
@@ -112,7 +113,11 @@ module MobileManetRoutingMesh
                 @display("p=149,307");
         }
 
-       connections allowunconnected:
+        mmapBoard: MMapBoard {
+            parameters:
+                @display("p=60,307;i=block/blackboard");
+        }
+    connections allowunconnected:
         for i=0..numTcpApps-1 {
             tcpApp[i].tcpOut --> tcp.appIn++;
             tcpApp[i].tcpIn <-- tcp.appOut++;

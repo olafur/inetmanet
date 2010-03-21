@@ -19,7 +19,7 @@
 
 package inet.experimental.nodes.adhoc;
 
-
+import inet.base.MMapBoard;
 import inet.base.NotificationBoard;
 import inet.mobility.BasicMobility;
 import inet.mobility.NullMobility;
@@ -92,6 +92,10 @@ module BasicMobileManetMesh
                 @display("p=38,73");
         }
 
+        mmapBoard: MMapBoard {
+            parameters:
+                @display("p=38,224;i=block/blackboard");
+        }
     connections allowunconnected:
 
         // connections to network outside
@@ -135,11 +139,15 @@ module BasicFixManetMesh
             parameters:
                 @display("p=101,275;q=queue");
         }
-        mobility:  NullMobility {
+        mobility: NullMobility {
             parameters:
                 @display("p=38,73");
         }
 
+        mmapBoard: MMapBoard {
+            parameters:
+                @display("p=38,251;i=block/blackboard");
+        }
     connections allowunconnected:
 
         // connections to network outside
