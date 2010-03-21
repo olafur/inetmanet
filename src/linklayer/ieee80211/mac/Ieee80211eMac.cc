@@ -243,8 +243,6 @@ void Ieee80211eMac::initialize(int stage)
         radioStateVector.setName("RadioState");
         radioStateVector.setEnum("RadioState");
 
-        queueModule = NULL;
-
         // initialize watches
         WATCH(fsm);
         WATCH(radioState);

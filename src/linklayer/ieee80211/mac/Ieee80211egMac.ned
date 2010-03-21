@@ -57,9 +57,7 @@ simple Ieee80211egMac
     parameters:
         string address = default("auto"); // MAC address as hex string (12 hex digits), or
                                           // "auto". "auto" values will be replaced by
-                                          // a generated MAC address in init stage 0.
-        
-        
+                                          // a generated MAC address in init stage 0.   
         string queueModule = default("");    // name of optional external queue module
         int maxQueueSize; // max queue length in frames; only used if queueModule==""
         int AIFSN0 = default(7); //AIFSN for background
@@ -71,6 +69,7 @@ simple Ieee80211egMac
         int opMode=default(2);//1=b 2= g
         double basicBitrate @unit("bps")= default(2e6bps);
         int mtu = default(1500);
+        double slotTime @unit("s")= default(9us);
         int rtsThresholdBytes @unit("B") = default(2346B); // longer messages will be sent using RTS/CTS
         int retryLimit = default(-1); // maximum number of retries per message, -1 means default
         int cwMinData = default(-1); // contention window for normal data frames, -1 means default

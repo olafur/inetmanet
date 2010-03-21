@@ -280,7 +280,6 @@ void Ieee80211egMac::initialize(int stage)
         cwStats.setName("Contetion Window");
         thStats.setName("Received Throughput");
 
-        queueModule = NULL;
 
         // initialize watches
         WATCH(fsm);
