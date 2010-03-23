@@ -166,6 +166,7 @@ class INET_API ChannelControl : public cSimpleModule
 
     /** @brief Returns the number of radio channels (frequencies) simulated */
     const int getNumChannels() {return numChannels;}
+    const HostRef lookupHostByName(const char *name);
 };
 
 #endif

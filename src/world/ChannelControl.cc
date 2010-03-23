@@ -338,3 +338,11 @@ void ChannelControl::sendToChannel(cSimpleModule *srcRadioMod, HostRef srcHost, 
 }
 
 
+const ChannelControl::HostRef ChannelControl::lookupHostByName(const char *name)
+{
+    Enter_Method_Silent();
+    for (HostList::iterator it = hosts.begin(); it != hosts.end(); it++)
+        if (strstr(it->host->getFullName(),name)!=NULL)
+            return &(*it);
+    return NULL;
+}
