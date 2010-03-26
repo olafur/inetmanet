@@ -117,6 +117,8 @@ class INET_API Ieee80211egMac : public WirelessMacBase, public INotifiable
      *
      */
     int AIFSN[4];
+    /** Default access catagory */
+    int defaultAC;
 
 	/** Slot time 9us(fast slot time 802.11g only) 20us(802.11b / 802.11g backward compatible)*/
     simtime_t ST;
@@ -184,6 +186,12 @@ class INET_API Ieee80211egMac : public WirelessMacBase, public INotifiable
     /** True during network allocation period. This flag is present to be able to watch this state. */
     bool nav;
 
+    /** True if we are in txop bursting packets. */
+    bool txop;
+
+    /** TXOP parametr */
+    simtime_t TXOP[4];
+
     /** Indicates which queue is acite. Depends on access category. */
     int currentAC;
 
@@ -211,6 +219,8 @@ class INET_API Ieee80211egMac : public WirelessMacBase, public INotifiable
 
     /** Messages received from upper layer and to be transmitted later */
     Ieee80211DataOrMgmtFrameList transmissionQueue[4];
+
+    Ieee80211DataOrMgmtFrame *fr;
 
      /**
      * A list of last sender, sequence and fragment number tuples to identify
@@ -241,6 +251,9 @@ class INET_API Ieee80211egMac : public WirelessMacBase, public INotifiable
     /** End of the Arbitration Inter-Frame Time period */
     cMessage *endAIFS[4];
 
+    /** End of the TXOP time limit period */
+    cMessage *endTXOP;
+
     /** End of the backoff period */
     cMessage *endBackoff[4];
 
@@ -261,19 +274,25 @@ class INET_API Ieee80211egMac : public WirelessMacBase, public INotifiable
     long numSentWithoutRetry[4];
     long numGivenUp[4];
     long numCollision;
+    long numInternalCollision;
     long numSent[4];
+    long numBites;
+    long numSentTXOP;
     long numReceived;
     long numSentBroadcast;
     long numReceivedBroadcast;
-    long numAckSend;
-    long numReceivedOther;
     long numDropped[4];
+    long numReceivedOther;
+    long numAckSend;
     cOutVector stateVector;
+    simtime_t  last;
+    long bites[4];
+    simtime_t minjitter[4];
+    simtime_t maxjitter[4];
+    cOutVector jitter[4];
+    cOutVector macDelay[4];
     cOutVector radioStateVector;
-    cOutVector receiveBroadcastVector;
-    cOutVector cwVector;
-    cStdDev cwStats;
-    cStdDev thStats;
+    cOutVector throughput[4];
     //@}
 
   public:
