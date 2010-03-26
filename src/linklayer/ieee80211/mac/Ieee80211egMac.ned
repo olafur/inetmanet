@@ -59,12 +59,17 @@ simple Ieee80211egMac
                                           // "auto". "auto" values will be replaced by
                                           // a generated MAC address in init stage 0.   
         string queueModule = default("");    // name of optional external queue module
-        int maxQueueSize; // max queue length in frames; only used if queueModule==""
+        int maxQueueSize = default(50); // max queue length in frames; only used if queueModule==""
+        int defaultAC = default(0); // what is default AC category
         int AIFSN0 = default(7); //AIFSN for background
         int AIFSN1 = default(3); //AIFSN for best effort
         int AIFSN2 = default(2); //AIFSN for video
         int AIFSN3 = default(2); //AIFSN for voice
-        
+        double TXOP0 = default(0);
+        double TXOP1 = default(0);
+        double TXOP2 = default(0.003008);    //3.008ms
+        double TXOP3 = default(0.001504);    //1.504ms
+	        
         double bitrate @unit("bps");
         int opMode=default(2);//1=b 2= g
         double basicBitrate @unit("bps")= default(2e6bps);
