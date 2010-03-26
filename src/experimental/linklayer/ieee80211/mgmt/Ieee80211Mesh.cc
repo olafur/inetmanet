@@ -52,7 +52,7 @@
 
 Define_Module(Ieee80211Mesh);
 
-uint64_t MacToUint64(const MACAddress &add)
+static uint64_t MacToUint64(const MACAddress &add)
 {
 	uint64_t aux;
 	uint64_t lo=0;
@@ -65,7 +65,7 @@ uint64_t MacToUint64(const MACAddress &add)
 	return lo;
 }
 
-MACAddress Uint64ToMac(uint64_t lo)
+static MACAddress Uint64ToMac(uint64_t lo)
 {
 	MACAddress add;
 	add.setAddressByte(0, (lo>>40)&0xff);
