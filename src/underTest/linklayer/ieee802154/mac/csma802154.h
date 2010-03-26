@@ -53,8 +53,8 @@ class  csma802154 : public Ieee802154Mac
 {
   public:
 
-	virtual void    initializeQueueModule    ();
 	virtual int    numInitStages    () const { return 3; }
+	csma802154(){};
 	~csma802154();
 
     /** @brief Initialization of the module and some variables*/
@@ -90,6 +90,7 @@ class  csma802154 : public Ieee802154Mac
 	long nbDuplicates;
 	long nbBackoffs;
 	double backoffValues;
+	bool useIeee802Ctrl;
 	/*@}*/
 
 	/** @brief Records general statistics?*/
@@ -273,7 +274,7 @@ protected:
 	void manageQueue();
 	void updateMacState(t_mac_states newMacState);
 
-	void attachSignal(Ieee802154Frame* mac, simtime_t startTime);
+	//void attachSignal(Ieee802154Frame* mac, simtime_t startTime);
 	void manageMissingAck(t_mac_event event, cMessage *msg);
 	void startTimer(t_mac_timer timer);
 

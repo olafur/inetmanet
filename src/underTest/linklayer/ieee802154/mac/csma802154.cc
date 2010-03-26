@@ -28,13 +28,40 @@
 #include "csma802154.h"
 #include "InterfaceTableAccess.h"
 #include "MACAddress.h"
+#include "Ieee802Ctrl_m.h"
 #include <assert.h>
 
 Define_Module(csma802154);
+static uint64_t MacToUint64(const MACAddress &add)
+{
+	uint64_t aux;
+	uint64_t lo=0;
+	for (int i=0;i<MAC_ADDRESS_BYTES;i++)
+	{
+		aux  = add.getAddressByte(MAC_ADDRESS_BYTES-i-1);
+		aux <<= 8*i;
+		lo  |= aux ;
+	}
+	return lo;
+}
+
+static MACAddress Uint64ToMac(uint64_t lo)
+{
+	MACAddress add;
+	add.setAddressByte(0, (lo>>40)&0xff);
+	add.setAddressByte(1, (lo>>32)&0xff);
+	add.setAddressByte(2, (lo>>24)&0xff);
+	add.setAddressByte(3, (lo>>16)&0xff);
+	add.setAddressByte(4, (lo>>8)&0xff);
+	add.setAddressByte(5, lo&0xff);
+	return add;
+}
+
 /**
  * Initialize the of the omnetpp.ini variables in stage 1. In stage
  * two subscribe to the RadioState.
  */
+
 #define L2BROADCAST def_macCoordExtendedAddress
 void csma802154::sendUp(cMessage *msg) {
     send(msg, mUppergateOut);
@@ -45,6 +72,7 @@ void csma802154::initialize(int stage) {
 	cSimpleModule::initialize(stage);
 	if (stage == 0) {
 		//get my mac address
+		useIeee802Ctrl=true;
 
 		const char *addressString = par("address");
         if (!strcmp(addressString, "auto")) {
@@ -165,7 +193,8 @@ void csma802154::finish() {
 	}
 }
 
-csma802154::~csma802154() {
+csma802154::~csma802154()
+{
 	cancelAndDelete(backoffTimer);
 	cancelAndDelete(ccaTimer);
 	cancelAndDelete(sifsTimer);
@@ -210,23 +239,38 @@ void csma802154::handleMessage(cMessage* msg)
  */
 void csma802154::handleUpperMsg(cMessage *msg) {
 	//MacPkt *macPkt = encapsMsg(msg);
-	queueModule->requestPacket();
+	reqtMsgFromIFq();
 	Ieee802154Frame *macPkt = new Ieee802154Frame(msg->getName());
 	macPkt->setBitLength(def_phyHeaderLength);
-	Ieee802154NetworkCtrlInfo* cInfo = check_and_cast<Ieee802154NetworkCtrlInfo *>(msg->removeControlInfo());
-	int dest;
-	if (cInfo->getNetwAddr()==-1)
+	cObject *controlInfo = msg->removeControlInfo();
+	IE3ADDR dest;
+	if (dynamic_cast<Ieee802Ctrl *>(controlInfo))
 	{
-		if (!simulation.getModuleByPath(cInfo->getDestName()))
-			error("[MAC]: address conversion fails, destination host does not exist!");
-		cModule* module = simulation.getModuleByPath(cInfo->getDestName())->getModuleByRelativePath("nic.mac");
-		Ieee802154Mac* macModule = check_and_cast<Ieee802154Mac *>(module);
-		dest = macModule->getMacAddr();
+		useIeee802Ctrl = true;
+		Ieee802Ctrl* cInfo = check_and_cast<Ieee802Ctrl *>(controlInfo);
+		MACAddress destination = cInfo->getDest();
+		dest = static_cast<IE3ADDR> (MacToUint64(destination));
 	}
 	else
-		dest=cInfo->getNetwAddr();
+	{
+		useIeee802Ctrl = false;
+		Ieee802154NetworkCtrlInfo* cInfo = check_and_cast<Ieee802154NetworkCtrlInfo *>(controlInfo);
+
+		if (cInfo->getNetwAddr()==-1)
+		{
+			if (!simulation.getModuleByPath(cInfo->getDestName()))
+				error("[MAC]: address conversion fails, destination host does not exist!");
+			cModule* module = simulation.getModuleByPath(cInfo->getDestName())->getModuleByRelativePath("nic.mac");
+			Ieee802154Mac* macModule = check_and_cast<Ieee802154Mac *>(module);
+			dest = macModule->getMacAddr();
+		}
+		else
+			dest=cInfo->getNetwAddr();
+
+	}
+	delete controlInfo;
 	macPkt->setDstAddr(dest);
-	delete cInfo;
+
 	EV<<"CSMA received a message from upper layer, name is " << msg->getName() <<", CInfo removed, mac addr="<< dest <<endl;
 	macPkt->setSrcAddr(getMacAddr());
 
@@ -566,7 +610,7 @@ void csma802154::updateStatusSIFS(t_mac_event event, cMessage *msg) {
 		EV<< "(17) FSM State WAITSIFS_6, EV_TIMER_SIFS:"
 		<< " sendAck -> TRANSMITACK." << endl;
 		updateMacState(TRANSMITACK_7);
-		attachSignal(ackMessage, simTime());
+		//attachSignal(ackMessage, simTime());
 		sendDown(ackMessage);
 		nbTxAcks++;
 		//		sendDelayed(ackMessage, aTurnaroundTime, lowergateOut);
@@ -909,9 +953,18 @@ void csma802154::handleLowerControl(cMessage *msg) {
 
 cPacket *csma802154::decapsMsg(Ieee802154Frame * macPkt) {
 	cPacket * msg = macPkt->decapsulate();
-	Ieee802154NetworkCtrlInfo * cinfo = new Ieee802154NetworkCtrlInfo();
-	cinfo->setNetwAddr(macPkt->getSrcAddr());
-	msg->setControlInfo(cinfo);
+	if (useIeee802Ctrl)
+	{
+		Ieee802Ctrl* cinfo = new Ieee802Ctrl();
+		MACAddress destination = Uint64ToMac (macPkt->getSrcAddr());
+		cinfo->setSrc(destination);
+		msg->setControlInfo(cinfo);
+	}
+	else
+	{
+		Ieee802154NetworkCtrlInfo * cinfo = new Ieee802154NetworkCtrlInfo();
+		cinfo->setNetwAddr(macPkt->getSrcAddr());
+	}
 	return msg;
 }
 
