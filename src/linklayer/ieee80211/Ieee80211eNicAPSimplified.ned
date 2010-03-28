@@ -1,5 +1,6 @@
 //
 // Copyright (C) 2006 Andras Varga
+// Copyright (C) 2009 Lukáš Hlůže   lukas@hluze.cz
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
