@@ -37,7 +37,7 @@ module Ieee80211eNicSTA
     gates:
         input uppergateIn; // to upper layers
         output uppergateOut; // from upper layers
-        input radioIn; // to receive AirFrames
+        input radioIn @labels(AirFrame); // to receive AirFrames
     submodules:
         agent: Ieee80211AgentSTA {
             parameters:
