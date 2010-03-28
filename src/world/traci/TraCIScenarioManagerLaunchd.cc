@@ -16,9 +16,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
- 
-#include "TraCIScenarioManagerLaunchd.h"
-#include "TraCIConstants.h"
+
+#include "world/traci/TraCIScenarioManagerLaunchd.h"
+#include "world/traci/TraCIConstants.h"
 #define CMD_FILE_SEND 0x75
 
 #include <sstream>

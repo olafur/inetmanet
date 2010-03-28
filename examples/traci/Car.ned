@@ -20,7 +20,7 @@ package inet.examples.traci;
 
 import inet.base.NotificationBoard;
 import inet.networklayer.common.InterfaceTable;
-import inet.mobility.TraCIMobility;
+import inet.mobility.traci.TraCIMobility;
 import inet.networklayer.ipv4.RoutingTable;
 import inet.transport.udp.UDP;
 import inet.nodes.inet.NetworkLayer;

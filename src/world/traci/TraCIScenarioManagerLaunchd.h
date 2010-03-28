@@ -23,7 +23,7 @@
 #include <omnetpp.h>
 
 #include "INETDefs.h"
-#include "TraCIScenarioManager.h"
+#include "world/traci/TraCIScenarioManager.h"
 
 /**
  * A TraCIScenarioManager that interacts with sumo-launchd

@@ -19,7 +19,7 @@
 package inet.examples.traci;
 
 import inet.world.ChannelControl;
-import inet.world.TraCIScenarioManager;
+import inet.world.traci.TraCIScenarioManager;
 
 module Highway
 {

@@ -21,7 +21,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "mobility/TraCIMobility.h"
+#include "mobility/traci/TraCIMobility.h"
 
 Define_Module(TraCIMobility);
 

@@ -30,9 +30,9 @@
 #endif
 #define MYSOCKET (*(SOCKET*)socketPtr)
 
-#include "TraCIScenarioManager.h"
-#include "TraCIConstants.h"
-#include "TraCIMobility.h"
+#include "world/traci/TraCIScenarioManager.h"
+#include "world/traci/TraCIConstants.h"
+#include "mobility/traci/TraCIMobility.h"
 
 Define_Module(TraCIScenarioManager);
 
