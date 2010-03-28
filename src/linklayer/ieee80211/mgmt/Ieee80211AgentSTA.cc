@@ -128,8 +128,9 @@ void Ieee80211AgentSTA::receiveChangeNotification(int category, const cPolymorph
 
     if (category == NF_L2_BEACON_LOST)
     {
-    	if ((cPolymorphic *)myEntry != details)
-    		return;
+    	if (myEntry!=NULL && details!=NULL)
+    		if ((cPolymorphic *)myEntry != details)
+    			return;
         //XXX should check details if it's about this NIC
         EV << "beacon lost, starting scanning again\n";
         getParentModule()->getParentModule()->bubble("Beacon lost!");
