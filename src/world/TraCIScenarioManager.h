@@ -23,21 +23,14 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <list>
+#include <stdexcept>
 
-#if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
-
-#include <errno.h>
 #include <omnetpp.h>
+
 #include "INETDefs.h"
 #include "ChannelControl.h"
 #include "ModuleAccess.h"
-
 
 /**
  * TraCIScenarioManager connects OMNeT++ to a TraCI server running road traffic simulations.
@@ -51,7 +44,7 @@
  */
 class INET_API TraCIScenarioManager : public cSimpleModule
 {
-  public:
+	public:
 
 		~TraCIScenarioManager();
 		virtual void initialize();
@@ -59,35 +52,39 @@ class INET_API TraCIScenarioManager : public cSimpleModule
 		virtual void handleMessage(cMessage *msg);
 		virtual void handleSelfMsg(cMessage *msg);
 
-    void commandSetMaximumSpeed(int32_t nodeId, float maxSpeed);
-    void commandChangeRoute(int32_t nodeId, std::string roadId, double travelTime);
-    float commandDistanceRequest(Coord position1, Coord position2, bool returnDrivingDistance);
-    void commandStopNode(int32_t nodeId, std::string roadId, float pos, uint8_t laneid, float radius, double waittime);
-    void commandSetTrafficLightProgram(std::string trafficLightId, std::string program);
-    void commandSetTrafficLightPhaseIndex(std::string trafficLightId, int32_t index);
+		void commandSetMaximumSpeed(int32_t nodeId, float maxSpeed);
+		void commandChangeRoute(int32_t nodeId, std::string roadId, double travelTime);
+		float commandDistanceRequest(Coord position1, Coord position2, bool returnDrivingDistance);
+		void commandStopNode(int32_t nodeId, std::string roadId, float pos, uint8_t laneid, float radius, double waittime);
+		void commandSetTrafficLightProgram(std::string trafficLightId, std::string program);
+		void commandSetTrafficLightPhaseIndex(std::string trafficLightId, int32_t index);
+		std::list<std::pair<float, float> > commandGetPolygonShape(std::string polyId);
+		void commandSetPolygonShape(std::string polyId, std::list<std::pair<float, float> > points);
 
-  protected:
+	protected:
 
-    bool debug; /**< whether to emit debug messages */
-    simtime_t updateInterval; /**< time interval to update the host's position */
-    std::string moduleType; /**< module type to be used in the simulation for each managed vehicle */
-    std::string moduleName; /**< module name to be used in the simulation for each managed vehicle */
-    std::string moduleDisplayString; /**< module displayString to be used in the simulation for each managed vehicle */
-    std::string host;
-    int port;
-    bool autoShutdown; /**< Shutdown module as soon as no more vehicles are in the simulation */
-    int margin;
+		bool debug; /**< whether to emit debug messages */
+		simtime_t updateInterval; /**< time interval to update the host's position */
+		std::string moduleType; /**< module type to be used in the simulation for each managed vehicle */
+		std::string moduleName; /**< module name to be used in the simulation for each managed vehicle */
+		std::string moduleDisplayString; /**< module displayString to be used in the simulation for each managed vehicle */
+		std::string host;
+		int port;
+		bool autoShutdown; /**< Shutdown module as soon as no more vehicles are in the simulation */
+		int margin;
+		std::list<std::string> roiRoads; /**< which roads (e.g. "hwy1 hwy2") are considered to consitute the region of interest, if not empty */
+		std::list<std::pair<Coord, Coord> > roiRects; /**< which rectangles (e.g. "0,0-10,10 20,20-30,30) are considered to consitute the region of interest, if not empty */
 
-		int socket;
+		void* socketPtr;
 		Coord netbounds1; /* network boundaries as reported by TraCI (x1, y1) */
 		Coord netbounds2; /* network boundaries as reported by TraCI (x2, y2) */
 
 		std::map<int32_t, cModule*> hosts; /**< vector of all hosts managed by us */
 		cMessage* executeOneTimestepTrigger; /**< self-message scheduled for when to next call executeOneTimestep */
 
-    ChannelControl* cc;
+		ChannelControl* cc;
 
-    void executeOneTimestep(); /**< read and execute all commands for the next timestep */
+		void executeOneTimestep(); /**< read and execute all commands for the next timestep */
 
 		void connect();
 		virtual void init_traci();
@@ -102,123 +99,130 @@ class INET_API TraCIScenarioManager : public cSimpleModule
 		 */
 		bool isInRegionOfInterest(const Coord& position, std::string road_id, double speed, double angle, double allowed_speed);
 
-    /**
-     * Byte-buffer that stores values in TraCI byte-order
-     */
-    class TraCIBuffer {
-      public:
-        TraCIBuffer() : buf() {
-          buf_index = 0;
-        }
+		/**
+		 * Byte-buffer that stores values in TraCI byte-order
+		 */
+		class TraCIBuffer {
+			public:
+				TraCIBuffer() : buf() {
+					buf_index = 0;
+				}
 
-        TraCIBuffer(std::string buf) : buf(buf) {
-          buf_index = 0;
-        }
+				TraCIBuffer(std::string buf) : buf(buf) {
+					buf_index = 0;
+				}
 
-        template<typename T> T read() {
-          T buf_to_return;
-          unsigned char *p_buf_to_return = reinterpret_cast<unsigned char*>(&buf_to_return);
+				template<typename T> T read() {
+					T buf_to_return;
+					unsigned char *p_buf_to_return = reinterpret_cast<unsigned char*>(&buf_to_return);
 
-          if (isBigEndian()) {
-            for (size_t i=0; i<sizeof(buf_to_return); ++i) {
-              if (eof()) throw std::runtime_error("Attempted to read past end of byte buffer");
-              p_buf_to_return[i] = buf[buf_index++];
-            }
-          } else {
-            for (size_t i=0; i<sizeof(buf_to_return); ++i) {
-              if (eof()) throw std::runtime_error("Attempted to read past end of byte buffer");
-              p_buf_to_return[sizeof(buf_to_return)-1-i] = buf[buf_index++];
-            }
-          }
+					if (isBigEndian()) {
+						for (size_t i=0; i<sizeof(buf_to_return); ++i) {
+							if (eof()) throw std::runtime_error("Attempted to read past end of byte buffer");
+							p_buf_to_return[i] = buf[buf_index++];
+						}
+					} else {
+						for (size_t i=0; i<sizeof(buf_to_return); ++i) {
+							if (eof()) throw std::runtime_error("Attempted to read past end of byte buffer");
+							p_buf_to_return[sizeof(buf_to_return)-1-i] = buf[buf_index++];
+						}
+					}
 
-          return buf_to_return;
-        }
+					return buf_to_return;
+				}
 
-        template<typename T> void write(T inv) {
-          unsigned char *p_buf_to_send = reinterpret_cast<unsigned char*>(&inv);
+				template<typename T> void write(T inv) {
+					unsigned char *p_buf_to_send = reinterpret_cast<unsigned char*>(&inv);
 
-          if (isBigEndian()) {
-            for (size_t i=0; i<sizeof(inv); ++i) {
-              buf += p_buf_to_send[i];
-            }
-          } else {
-            for (size_t i=0; i<sizeof(inv); ++i) {
-              buf += p_buf_to_send[sizeof(inv)-1-i];
-            }
-          }
-        }
+					if (isBigEndian()) {
+						for (size_t i=0; i<sizeof(inv); ++i) {
+							buf += p_buf_to_send[i];
+						}
+					} else {
+						for (size_t i=0; i<sizeof(inv); ++i) {
+							buf += p_buf_to_send[sizeof(inv)-1-i];
+						}
+					}
+				}
 
-        template<typename T> T read(T& out) {
-          out = read<T>();
-          return out;
-        }
+				template<typename T> T read(T& out) {
+					out = read<T>();
+					return out;
+				}
 
-        template<typename T> TraCIBuffer& operator >>(T& out) {
-          out = read<T>();
-          return *this;
-        }
+				template<typename T> TraCIBuffer& operator >>(T& out) {
+					out = read<T>();
+					return *this;
+				}
 
-        template<typename T> TraCIBuffer& operator <<(const T& inv) {
-          write(inv);
-          return *this;
-        }
+				template<typename T> TraCIBuffer& operator <<(const T& inv) {
+					write(inv);
+					return *this;
+				}
 
-        bool eof() const {
-          return buf_index == buf.length();
-        }
+				bool eof() const {
+					return buf_index == buf.length();
+				}
 
-        void set(std::string buf) {
-          this->buf = buf;
-          buf_index = 0;
-        }
+				void set(std::string buf) {
+					this->buf = buf;
+					buf_index = 0;
+				}
 
-        void clear() {
-          set("");
-        }
+				void clear() {
+					set("");
+				}
 
-        std::string str() const {
-          return buf;
-        }
+				std::string str() const {
+					return buf;
+				}
 
-      protected:
-        bool isBigEndian() {
-          short a = 0x0102;
-          unsigned char *p_a = reinterpret_cast<unsigned char*>(&a);
-          return (p_a[0] == 0x01);
-        }
+			protected:
+				bool isBigEndian() {
+					short a = 0x0102;
+					unsigned char *p_a = reinterpret_cast<unsigned char*>(&a);
+					return (p_a[0] == 0x01);
+				}
 
-        std::string buf;
-        size_t buf_index;
-    };
+				std::string buf;
+				size_t buf_index;
+		};
 
-    void processObjectCreation(uint8_t domain, int32_t nodeId);
-    void processObjectDestruction(uint8_t domain, int32_t nodeId);
-    void processUpdateObject(uint8_t domain, int32_t nodeId, TraCIBuffer& buf);
+		void processObjectCreation(uint8_t domain, int32_t nodeId);
 
-    /**
-     * sends a single command via TraCI, checks status response, returns additional responses
-     */
-    TraCIBuffer queryTraCI(uint8_t commandId, const TraCIBuffer& buf = TraCIBuffer());
+		void processObjectDestruction(uint8_t domain, int32_t nodeId);
 
-    /**
-     * returns byte-buffer containing a TraCI command with optional parameters
-     */
-    std::string makeTraCICommand(uint8_t commandId, TraCIBuffer buf = TraCIBuffer());
+		void processUpdateObject(uint8_t domain, int32_t nodeId, TraCIBuffer& buf);
 
-    /**
-     * sends a message via TraCI (after adding the header)
-     */
-    void sendTraCIMessage(std::string buf);
+		/**
+		 * sends a single command via TraCI, checks status response, returns additional responses
+		 */
+		TraCIBuffer queryTraCI(uint8_t commandId, const TraCIBuffer& buf = TraCIBuffer());
 
-    /**
-     * receives a message via TraCI (and strips the header)
-     */
-    std::string receiveTraCIMessage();
+		/**
+		 * sends a single command via TraCI, expects no reply, returns true if successful
+		 */
+		bool queryTraCIOptional(uint8_t commandId, const TraCIBuffer& buf, std::string* errorMsg = 0);
 
-    /**
-     * convert TraCI coordinates to OMNeT++ coordinates
-     */
-    Coord traci2omnet(Coord coord) const;
+		/**
+		 * returns byte-buffer containing a TraCI command with optional parameters
+		 */
+		std::string makeTraCICommand(uint8_t commandId, TraCIBuffer buf = TraCIBuffer());
+
+		/**
+		 * sends a message via TraCI (after adding the header)
+		 */
+		void sendTraCIMessage(std::string buf);
+
+		/**
+		 * receives a message via TraCI (and strips the header)
+		 */
+		std::string receiveTraCIMessage();
+
+		/**
+		 * convert TraCI coordinates to OMNeT++ coordinates
+		 */
+		Coord traci2omnet(Coord coord) const;
 
 		/**
 		 * convert OMNeT++ coordinates to TraCI coordinates
@@ -242,8 +246,8 @@ template<> std::string TraCIScenarioManager::TraCIBuffer::read();
 
 class TraCIScenarioManagerAccess : public ModuleAccess<TraCIScenarioManager>
 {
-  public:
-    TraCIScenarioManagerAccess() : ModuleAccess<TraCIScenarioManager>("manager") {};
+	public:
+		TraCIScenarioManagerAccess() : ModuleAccess<TraCIScenarioManager>("manager") {};
 };
 
 #endif

@@ -9,32 +9,33 @@
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
  
 #include "TraCIScenarioManagerLaunchd.h"
 #include "TraCIConstants.h"
 #define CMD_FILE_SEND 0x75
- 
+
 #include <sstream>
 #include <iostream>
 #include <fstream>
- 
+
 Define_Module(TraCIScenarioManagerLaunchd);
- 
+
 TraCIScenarioManagerLaunchd::~TraCIScenarioManagerLaunchd()
 {
 }
- 
- 
+
+
 void TraCIScenarioManagerLaunchd::initialize()
 {
 	launchConfig = par("launchConfig").xmlValue();
+	seed = par("seed");
 	cXMLElementList basedir_nodes = launchConfig->getElementsByTagName("basedir");
 	if (basedir_nodes.size() == 0) {
 		// default basedir is where current network file was loaded from
@@ -42,6 +43,18 @@ void TraCIScenarioManagerLaunchd::initialize()
 		cXMLElement* basedir_node = new cXMLElement("basedir", __FILE__, launchConfig);
 		basedir_node->setAttribute("path", basedir.c_str());
 		launchConfig->appendChild(basedir_node);
+	}
+	cXMLElementList seed_nodes = launchConfig->getElementsByTagName("seed");
+	if (seed_nodes.size() == 0) {
+		if (seed == -1) {
+			// default seed is current repetition
+			const char* seed_s = cSimulation::getActiveSimulation()->getEnvir()->getConfigEx()->getVariable(CFGVAR_RUNNUMBER);
+			seed = atoi(seed_s);
+		}
+		std::stringstream ss; ss << seed;
+		cXMLElement* seed_node = new cXMLElement("seed", __FILE__, launchConfig);
+		seed_node->setAttribute("value", ss.str().c_str());
+		launchConfig->appendChild(seed_node);
 	}
 	TraCIScenarioManager::initialize();
 }

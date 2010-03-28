@@ -17,12 +17,22 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 
+#include <sstream>
+
+#define WANT_WINSOCK2
+#include <platdep/sockets.h>
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__) || defined(_WIN64)
+#include <ws2tcpip.h>
+#else
+#include <netinet/tcp.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#endif
+#define MYSOCKET (*(SOCKET*)socketPtr)
+
 #include "TraCIScenarioManager.h"
 #include "TraCIConstants.h"
 #include "TraCIMobility.h"
-
-#include <sstream>
-
 
 Define_Module(TraCIScenarioManager);
 
@@ -43,6 +53,32 @@ void TraCIScenarioManager::initialize()
 	port = par("port");
 	autoShutdown = par("autoShutdown");
 	margin = par("margin");
+	std::string roiRoads_s = par("roiRoads");
+	std::string roiRects_s = par("roiRects");
+
+	// parse roiRoads
+	roiRoads.clear();
+	std::istringstream roiRoads_i(roiRoads_s);
+	std::string road;
+	while (std::getline(roiRoads_i, road, ' ')) {
+		roiRoads.push_back(road);
+	}
+
+	// parse roiRects
+	roiRects.clear();
+	std::istringstream roiRects_i(roiRects_s);
+	std::string rect;
+	while (std::getline(roiRects_i, rect, ' ')) {
+		std::istringstream rect_i(rect);
+		double x1; rect_i >> x1; if (!rect_i) error("parse error in roiRects");
+		char c1; rect_i >> c1;
+		double y1; rect_i >> y1; if (!rect_i) error("parse error in roiRects");
+		char c2; rect_i >> c2;
+		double x2; rect_i >> x2; if (!rect_i) error("parse error in roiRects");
+		char c3; rect_i >> c3;
+		double y2; rect_i >> y2; if (!rect_i) error("parse error in roiRects");
+		roiRects.push_back(std::pair<Coord, Coord>(Coord(x1,y1), Coord(x2, y2)));
+	}
 
 	executeOneTimestepTrigger = new cMessage("step");
 	scheduleAt(0, executeOneTimestepTrigger);
@@ -51,7 +87,7 @@ void TraCIScenarioManager::initialize()
 	if (cc == 0) error("Could not find a ChannelControl module named channelcontrol");
 
 	if (debug) EV << "TraCIScenarioManager connecting to TraCI server" << endl;
-	socket = -1;
+	socketPtr = 0;
 	connect();
 	init_traci();
 
@@ -59,20 +95,20 @@ void TraCIScenarioManager::initialize()
 }
 
 std::string TraCIScenarioManager::receiveTraCIMessage() {
-	if (socket < 0) error("Connection to TraCI server lost");
+	if (!socketPtr) error("Connection to TraCI server lost");
 
 	uint32_t msgLength;
 	{
 		char buf2[sizeof(uint32_t)];
 		uint32_t bytesRead = 0;
 		while (bytesRead < sizeof(uint32_t)) {
-			int receivedBytes = ::recv(socket, reinterpret_cast<char*>(&buf2) + bytesRead, sizeof(uint32_t) - bytesRead, 0);
+			int receivedBytes = ::recv(MYSOCKET, reinterpret_cast<char*>(&buf2) + bytesRead, sizeof(uint32_t) - bytesRead, 0);
 			if (receivedBytes > 0) {
 				bytesRead += receivedBytes;
 			} else {
 				if (errno == EINTR) continue;
 				if (errno == EAGAIN) continue;
-				error("Could not read %d bytes from TraCI server, got only %d: %s", sizeof(uint32_t), bytesRead, strerror(errno));
+				error("Could not read %d bytes from TraCI server, got only %d: %s", sizeof(uint32_t), bytesRead, strerror(sock_errno()));
 			}
 		}
 		TraCIBuffer(std::string(buf2, sizeof(uint32_t))) >> msgLength;
@@ -84,7 +120,7 @@ std::string TraCIScenarioManager::receiveTraCIMessage() {
 		if (debug) EV << "Reading TraCI message of " << bufLength << " bytes" << endl;
 		uint32_t bytesRead = 0;
 		while (bytesRead < bufLength) {
-			int receivedBytes = ::recv(socket, reinterpret_cast<char*>(&buf) + bytesRead, bufLength - bytesRead, 0);
+			int receivedBytes = ::recv(MYSOCKET, reinterpret_cast<char*>(&buf) + bytesRead, bufLength - bytesRead, 0);
 			if (receivedBytes > 0) {
 				bytesRead += receivedBytes;
 			} else {
@@ -98,18 +134,18 @@ std::string TraCIScenarioManager::receiveTraCIMessage() {
 }
 
 void TraCIScenarioManager::sendTraCIMessage(std::string buf) {
-	if (socket < 0) error("Connection to TraCI server lost");
+	if (!socketPtr) error("Connection to TraCI server lost");
 
 	{
 		uint32_t msgLength = sizeof(uint32_t) + buf.length();
 		TraCIBuffer buf2 = TraCIBuffer(); buf2 << msgLength;
-		size_t sentBytes = ::send(socket, buf2.str().c_str(), sizeof(uint32_t), 0);
+		size_t sentBytes = ::send(MYSOCKET, buf2.str().c_str(), sizeof(uint32_t), 0);
 		if (sentBytes != sizeof(uint32_t)) error("Could not write %d bytes to TraCI server, sent only %d: %s", sizeof(uint32_t), sentBytes, strerror(errno));
 	}
 
 	{
 		if (debug) EV << "Writing TraCI message of " << buf.length() << " bytes" << endl;
-		size_t sentBytes = ::send(socket, buf.c_str(), buf.length(), 0);
+		size_t sentBytes = ::send(MYSOCKET, buf.c_str(), buf.length(), 0);
 		if (sentBytes != buf.length()) error("Could not write %d bytes to TraCI server, sent only %d: %s", buf.length(), sentBytes, strerror(errno));
 	}
 }
@@ -135,7 +171,21 @@ TraCIScenarioManager::TraCIBuffer TraCIScenarioManager::queryTraCI(uint8_t comma
 	return obuf;
 }
 
+bool TraCIScenarioManager::queryTraCIOptional(uint8_t commandId, const TraCIBuffer& buf, std::string* errorMsg) {
+	sendTraCIMessage(makeTraCICommand(commandId, buf));
+
+	TraCIBuffer obuf(receiveTraCIMessage());
+	uint8_t cmdLength; obuf >> cmdLength;
+	uint8_t commandResp; obuf >> commandResp; if (commandResp != commandId) error("Expected response to command %d, but got one for command %d", commandId, commandResp);
+	uint8_t result; obuf >> result;
+	std::string description; obuf >> description;
+	if (!obuf.eof()) error("expected only an OK/ERR response, but received additional bytes");
+	return (result == RTYPE_OK);
+}
+
 void TraCIScenarioManager::connect() {
+	if (initsocketlibonce() != 0) error("Could not init socketlib");
+
 	in_addr addr;
 	struct hostent* host_ent;
 	struct in_addr saddr;
@@ -156,14 +206,15 @@ void TraCIScenarioManager::connect() {
 	address.sin_port = htons(port);
 	address.sin_addr.s_addr = addr.s_addr;
 
-	socket = ::socket( AF_INET, SOCK_STREAM, 0 );
-	if (socket < 0) error("Could not create socket to connect to TraCI server");
+	socketPtr = new SOCKET();
+	MYSOCKET = ::socket( AF_INET, SOCK_STREAM, 0 );
+	if (MYSOCKET < 0) error("Could not create socket to connect to TraCI server");
 
-	if (::connect(socket, (sockaddr const*)&address, sizeof(address)) < 0) error("Could not connect to TraCI server");
+	if (::connect(MYSOCKET, (sockaddr const*)&address, sizeof(address)) < 0) error("Could not connect to TraCI server");
 
 	{
 		int x = 1;
-		::setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (const char*)&x, sizeof(x));
+		::setsockopt(MYSOCKET, IPPROTO_TCP, TCP_NODELAY, (const char*)&x, sizeof(x));
 	}
 }
 
@@ -230,9 +281,10 @@ void TraCIScenarioManager::finish()
 		delete executeOneTimestepTrigger;
 		executeOneTimestepTrigger = 0;
 	}
-	if (socket >= 0) {
-		::close(socket);
-		socket = -1;
+	if (socketPtr) {
+		closesocket(MYSOCKET);
+		delete &MYSOCKET;
+		socketPtr = 0;
 	}
 	while (hosts.begin() != hosts.end()) {
 		deleteModule(hosts.begin()->first);
@@ -320,6 +372,47 @@ void TraCIScenarioManager::commandSetTrafficLightPhaseIndex(std::string trafficL
 	if (!buf.eof()) error("expected only an OK response, but received additional bytes");
 }
 
+std::list<std::pair<float, float> > TraCIScenarioManager::commandGetPolygonShape(std::string polyId) {
+	std::list<std::pair<float, float> > res;
+
+	TraCIBuffer buf = queryTraCI(CMD_GET_POLYGON_VARIABLE, TraCIBuffer() << static_cast<uint8_t>(VAR_SHAPE) << polyId);
+
+	// read additional RESPONSE_GET_POLYGON_VARIABLE sent back in response
+	uint8_t cmdLength; buf >> cmdLength;
+	if (cmdLength == 0) {
+		uint32_t cmdLengthX; buf >> cmdLengthX;
+	}
+	uint8_t commandId; buf >> commandId; if (commandId != RESPONSE_GET_POLYGON_VARIABLE) error("Expected response type RESPONSE_GET_POLYGON_VARIABLE, but got %d", commandId);
+	uint8_t varId; buf >> varId; if (varId != VAR_SHAPE) error("Expected response variable VAR_SHAPE, but got %d", varId);
+	std::string polyId_r; buf >> polyId_r; if (polyId_r != polyId) error("Received response for wrong polyId: expected %s, but got %s", polyId.c_str(), polyId_r.c_str());
+	uint8_t resType_r; buf >> resType_r; if (resType_r != TYPE_POLYGON) error("Received wrong response type: expected %d, but got %d", TYPE_POLYGON, resType_r);
+	uint8_t count; buf >> count;
+	for (uint8_t i = 0; i < count; i++) {
+		float x; buf >> x;
+		float y; buf >> y;
+		Coord pos = traci2omnet(Coord(x, y));
+		res.push_back(std::make_pair(pos.x, pos.y));
+	}
+
+	if (!buf.eof()) error("received additional bytes");
+
+	return res;
+}
+
+void TraCIScenarioManager::commandSetPolygonShape(std::string polyId, std::list<std::pair<float, float> > points) {
+	TraCIBuffer buf;
+	uint8_t count = static_cast<uint8_t>(points.size());
+	buf << static_cast<uint8_t>(VAR_SHAPE) << polyId << static_cast<uint8_t>(TYPE_POLYGON) << count;
+	for (std::list<std::pair<float, float> >::const_iterator i = points.begin(); i != points.end(); ++i) {
+		float x = i->first;
+		float y = i->second;
+		Coord pos = omnet2traci(Coord(x, y));
+		buf << static_cast<float>(pos.x) << static_cast<float>(pos.y);
+	}
+	TraCIBuffer obuf = queryTraCI(CMD_SET_POLYGON_VARIABLE, buf);
+	if (!obuf.eof()) error("received additional bytes");
+}
+
 // name: host;Car;i=vehicle.gif
 void TraCIScenarioManager::addModule(int32_t nodeId, std::string type, std::string name, std::string displayString, const Coord& position, std::string road_id, double speed, double angle, double allowed_speed) {
 	if (hosts.find(nodeId) != hosts.end()) error("tried adding duplicate module");
@@ -369,7 +462,18 @@ void TraCIScenarioManager::deleteModule(int32_t nodeId) {
 }
 
 bool TraCIScenarioManager::isInRegionOfInterest(const Coord& position, std::string road_id, double speed, double angle, double allowed_speed) {
-	return true;
+	if ((roiRoads.size() == 0) && (roiRects.size() == 0)) return true;
+	if (roiRoads.size() > 0) {
+		for (std::list<std::string>::const_iterator i = roiRoads.begin(); i != roiRoads.end(); ++i) {
+			if (road_id == *i) return true;
+		}
+	}
+	if (roiRects.size() > 0) {
+		for (std::list<std::pair<Coord, Coord> >::const_iterator i = roiRects.begin(); i != roiRects.end(); ++i) {
+			if ((position.x >= i->first.x) && (position.y >= i->first.y) && (position.x <= i->second.x) && (position.y <= i->second.y)) return true;
+		}
+	}
+	return false;
 }
 
 void TraCIScenarioManager::processObjectCreation(uint8_t domain, int32_t nodeId) {

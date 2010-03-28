@@ -43,7 +43,7 @@
  */
 class INET_API TraCIMobility : public BasicMobility
 {
-  public:
+	public:
 		class Statistics {
 			public:
 				double firstRoadNumber; /**< for statistics: number of first road we encountered (if road id can be expressed as a number) */
@@ -61,96 +61,102 @@ class INET_API TraCIMobility : public BasicMobility
 		};
 
 		TraCIMobility() : BasicMobility(), isPreInitialized(false) {}
-    virtual void initialize(int);
-    virtual void finish();
+		virtual void initialize(int);
+		virtual void finish();
 
-    virtual void handleSelfMsg(cMessage *msg);
+		virtual void handleSelfMsg(cMessage *msg);
 		virtual void preInitialize(int32_t external_id, const Coord& position, std::string road_id = "", double speed = -1, double angle = -1, double allowed_speed = -1);
 		virtual void nextPosition(const Coord& position, std::string road_id = "", double speed = -1, double angle = -1, double allowed_speed = -1);
-    virtual void changePosition();
-    virtual void setExternalId(int32_t external_id) {
-      this->external_id = external_id;
-    }
-    virtual int32_t getExternalId() {
-      if (external_id == -1) throw std::runtime_error("TraCIMobility::getExternalId called with no external_id set yet");
-      return external_id;
-    }
-    virtual Coord getPosition() {
-      return pos;
-    }
-    virtual std::string getRoadId() {
-      if (road_id == "") throw std::runtime_error("TraCIMobility::getRoadId called with no road_id set yet");
-      return road_id;
-    }
-    virtual double getSpeed() {
-      if (speed == -1) throw std::runtime_error("TraCIMobility::getSpeed called with no speed set yet");
-      return speed;
-    }
+		virtual void changePosition();
+		virtual void setExternalId(int32_t external_id) {
+			this->external_id = external_id;
+		}
+		virtual int32_t getExternalId() {
+			if (external_id == -1) throw std::runtime_error("TraCIMobility::getExternalId called with no external_id set yet");
+			return external_id;
+		}
+		virtual Coord getPosition() {
+			return pos;
+		}
+		virtual std::string getRoadId() {
+			if (road_id == "") throw std::runtime_error("TraCIMobility::getRoadId called with no road_id set yet");
+			return road_id;
+		}
+		virtual double getSpeed() {
+			if (speed == -1) throw std::runtime_error("TraCIMobility::getSpeed called with no speed set yet");
+			return speed;
+		}
 		/**
 		 * returns angle in rads, 0 being east, with -M_PI <= angle < M_PI. 
 		 */
 		virtual double getAngleRad() {
 			if (angle == M_PI) throw std::runtime_error("TraCIMobility::getAngleRad called with no angle set yet");
-      return angle;
-    }
-    virtual double getAllowedSpeed() {
-      if (allowed_speed == -1) throw std::runtime_error("TraCIMobility::getAllowedSpeed called with no allowed speed set yet");
-      return allowed_speed;
-    }
-    virtual TraCIScenarioManager* getManager() {
-      if (!manager) manager = TraCIScenarioManagerAccess().get();
-      return manager;
-    }
-    void commandSetMaximumSpeed(float maxSpeed) {
-      getManager()->commandSetMaximumSpeed(getExternalId(), maxSpeed);
-    }
-    void commandChangeRoute(std::string roadId, double travelTime) {
-      getManager()->commandChangeRoute(getExternalId(), roadId, travelTime);
-    }
-    float commandDistanceRequest(Coord position1, Coord position2, bool returnDrivingDistance) {
-    	return getManager()->commandDistanceRequest(position1, position2, returnDrivingDistance);
-    }
-    void commandStopNode(std::string roadId, float pos, uint8_t laneid, float radius, double waittime) {
-    	return getManager()->commandStopNode(getExternalId(), roadId, pos, laneid, radius, waittime);
-    }
+			return angle;
+		}
+		virtual double getAllowedSpeed() {
+			if (allowed_speed == -1) throw std::runtime_error("TraCIMobility::getAllowedSpeed called with no allowed speed set yet");
+			return allowed_speed;
+		}
+		virtual TraCIScenarioManager* getManager() {
+			if (!manager) manager = TraCIScenarioManagerAccess().get();
+			return manager;
+		}
+		void commandSetMaximumSpeed(float maxSpeed) {
+			getManager()->commandSetMaximumSpeed(getExternalId(), maxSpeed);
+		}
+		void commandChangeRoute(std::string roadId, double travelTime) {
+			getManager()->commandChangeRoute(getExternalId(), roadId, travelTime);
+		}
+		float commandDistanceRequest(Coord position1, Coord position2, bool returnDrivingDistance) {
+			return getManager()->commandDistanceRequest(position1, position2, returnDrivingDistance);
+		}
+		void commandStopNode(std::string roadId, float pos, uint8_t laneid, float radius, double waittime) {
+			return getManager()->commandStopNode(getExternalId(), roadId, pos, laneid, radius, waittime);
+		}
+		std::list<std::pair<float, float> > commandGetPolygonShape(std::string polyId) {
+			return getManager()->commandGetPolygonShape(polyId);
+		}
+		void commandSetPolygonShape(std::string polyId, std::list<std::pair<float, float> > points) {
+			getManager()->commandSetPolygonShape(polyId, points);
+		}
 
-  protected:
-    bool debug; /**< whether to emit debug messages */
-    int accidentCount; /**< number of accidents */
+	protected:
+		bool debug; /**< whether to emit debug messages */
+		int accidentCount; /**< number of accidents */
 
-    cOutVector currentPosXVec; /**< vector plotting posx */
-    cOutVector currentPosYVec; /**< vector plotting posy */
-    cOutVector currentSpeedVec; /**< vector plotting speed */
-    cOutVector currentAccelerationVec; /**< vector plotting acceleration */
-    cOutVector currentCO2EmissionVec; /**< vector plotting current CO2 emission */
+		cOutVector currentPosXVec; /**< vector plotting posx */
+		cOutVector currentPosYVec; /**< vector plotting posy */
+		cOutVector currentSpeedVec; /**< vector plotting speed */
+		cOutVector currentAccelerationVec; /**< vector plotting acceleration */
+		cOutVector currentCO2EmissionVec; /**< vector plotting current CO2 emission */
 
 		Statistics statistics; /**< everything statistics-related */
 
 		bool isPreInitialized; /**< true if preInitialize() has been called immediately before initialize() */
 
-    int32_t external_id; /**< updated by setExternalId() */
+		int32_t external_id; /**< updated by setExternalId() */
 
-    simtime_t lastUpdate; /**< updated by nextPosition() */
-    Coord nextPos; /**< updated by nextPosition() */
-    std::string road_id; /**< updated by nextPosition() */
-    double speed; /**< updated by nextPosition() */
-    double angle; /**< updated by nextPosition() */
-    double allowed_speed; /**< updated by nextPosition() */
+		simtime_t lastUpdate; /**< updated by nextPosition() */
+		Coord nextPos; /**< updated by nextPosition() */
+		std::string road_id; /**< updated by nextPosition() */
+		double speed; /**< updated by nextPosition() */
+		double angle; /**< updated by nextPosition() */
+		double allowed_speed; /**< updated by nextPosition() */
 
-    cMessage* startAccidentMsg;
-    cMessage* stopAccidentMsg;
-    TraCIScenarioManager* manager;
-    double last_speed;
+		cMessage* startAccidentMsg;
+		cMessage* stopAccidentMsg;
+		TraCIScenarioManager* manager;
+		double last_speed;
 
-    virtual void fixIfHostGetsOutside(); /**< called after each read to check for (and handle) invalid positions */
+		virtual void fixIfHostGetsOutside(); /**< called after each read to check for (and handle) invalid positions */
 
-    /**
-     * Returns the amount of CO2 emissions in grams/second, calculated for an average Car
-     * @param v speed in m/s
-     * @param a acceleration in m/s^2
-     * @returns emission in g/s
-     */
-    double calculateCO2emission(double v, double a);
+		/**
+		 * Returns the amount of CO2 emissions in grams/second, calculated for an average Car
+		 * @param v speed in m/s
+		 * @param a acceleration in m/s^2
+		 * @returns emission in g/s
+		 */
+		double calculateCO2emission(double v, double a);
 };
 
 class TraCIMobilityAccess : public ModuleAccess<TraCIMobility>

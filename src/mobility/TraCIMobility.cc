@@ -72,25 +72,25 @@ void TraCIMobility::initialize(int stage)
 {
 	// skip stage 1 initialisation of BasicMobility as this messes with pos.x/pos.y and triggers an NB update with these wrong values
 	if (stage != 1) {
-  BasicMobility::initialize(stage);
+		BasicMobility::initialize(stage);
 	}
 
-  if (stage == 1)
-  {
-    debug = par("debug");
-    accidentCount = par("accidentCount");
+	if (stage == 1)
+	{
+		debug = par("debug");
+		accidentCount = par("accidentCount");
 
-    currentPosXVec.setName("posx");
-    currentPosYVec.setName("posy");
-    currentSpeedVec.setName("speed");
-    currentAccelerationVec.setName("acceleration");
-    currentCO2EmissionVec.setName("co2emission");
+		currentPosXVec.setName("posx");
+		currentPosYVec.setName("posy");
+		currentSpeedVec.setName("speed");
+		currentAccelerationVec.setName("acceleration");
+		currentCO2EmissionVec.setName("co2emission");
 
 		statistics.initialize();
 		statistics.watch(*this);
 
 		if (!isPreInitialized) {
-    external_id = -1;
+			external_id = -1;
 			nextPos = Coord(-1,-1);
 			road_id = -1; 
 			speed = -1; 
@@ -108,20 +108,20 @@ void TraCIMobility::initialize(int stage)
 		WATCH(pos.x);
 		WATCH(pos.y);
 
-    startAccidentMsg = 0;
-    stopAccidentMsg = 0;
-    manager = 0;
-    last_speed = -1;
+		startAccidentMsg = 0;
+		stopAccidentMsg = 0;
+		manager = 0;
+		last_speed = -1;
 
-    if (accidentCount > 0) {
-      simtime_t accidentStart = par("accidentStart");
-      startAccidentMsg = new cMessage("scheduledAccident");
-      stopAccidentMsg = new cMessage("scheduledAccidentResolved");
-      scheduleAt(simTime() + accidentStart, startAccidentMsg);
-    }
+		if (accidentCount > 0) {
+			simtime_t accidentStart = par("accidentStart");
+			startAccidentMsg = new cMessage("scheduledAccident");
+			stopAccidentMsg = new cMessage("scheduledAccidentResolved");
+			scheduleAt(simTime() + accidentStart, startAccidentMsg);
+		}
 
 		updatePosition();
-  }
+	}
 
 }
 
@@ -131,27 +131,27 @@ void TraCIMobility::finish()
 
 	statistics.recordScalars(*this);
 
-  cancelAndDelete(startAccidentMsg);
-  cancelAndDelete(stopAccidentMsg);
+	cancelAndDelete(startAccidentMsg);
+	cancelAndDelete(stopAccidentMsg);
 
 	isPreInitialized = false;
 }
 
 void TraCIMobility::handleSelfMsg(cMessage *msg)
 {
-  if (msg == startAccidentMsg) {
-    commandSetMaximumSpeed(0);
-    simtime_t accidentDuration = par("accidentDuration");
-    scheduleAt(simTime() + accidentDuration, stopAccidentMsg);
-    accidentCount--;
-  }
-  else if (msg == stopAccidentMsg) {
-    commandSetMaximumSpeed(-1);
-    if (accidentCount > 0) {
-      simtime_t accidentInterval = par("accidentInterval");
-      scheduleAt(simTime() + accidentInterval, startAccidentMsg);
-    }
-  }
+	if (msg == startAccidentMsg) {
+		commandSetMaximumSpeed(0);
+		simtime_t accidentDuration = par("accidentDuration");
+		scheduleAt(simTime() + accidentDuration, stopAccidentMsg);
+		accidentCount--;
+	}
+	else if (msg == stopAccidentMsg) {
+		commandSetMaximumSpeed(-1);
+		if (accidentCount > 0) {
+			simtime_t accidentInterval = par("accidentInterval");
+			scheduleAt(simTime() + accidentInterval, startAccidentMsg);
+		}
+	}
 }
 
 void TraCIMobility::preInitialize(int32_t external_id, const Coord& position, std::string road_id, double speed, double angle, double allowed_speed)
@@ -174,85 +174,85 @@ void TraCIMobility::nextPosition(const Coord& position, std::string road_id, dou
 	if (debug) EV << "nextPosition " << position.x << " " << position.y << " " << road_id << " " << speed << " " << angle << " " << allowed_speed << std::endl;
 	isPreInitialized = false;
 	nextPos = position;
-  this->road_id = road_id;
-  this->speed = speed;
-  this->angle = angle;
-  this->allowed_speed = allowed_speed;
-  changePosition();
+	this->road_id = road_id;
+	this->speed = speed;
+	this->angle = angle;
+	this->allowed_speed = allowed_speed;
+	changePosition();
 }
 
 void TraCIMobility::changePosition()
 {
-  simtime_t updateInterval = simTime() - this->lastUpdate;
-  this->lastUpdate = simTime();
+	simtime_t updateInterval = simTime() - this->lastUpdate;
+	this->lastUpdate = simTime();
 
 	// keep track of first road id we encounter
 	if (statistics.firstRoadNumber == MY_INFINITY && (!road_id.empty())) statistics.firstRoadNumber = roadIdAsDouble(road_id);
 
-  // keep speed statistics
-  if ((pos.x != -1) && (pos.y != -1)) {
+	// keep speed statistics
+	if ((pos.x != -1) && (pos.y != -1)) {
 		double distance = pos.distance(nextPos);
 		statistics.totalDistance += distance;
 		statistics.totalTime += updateInterval;
-    if (speed != -1) {
+		if (speed != -1) {
 			statistics.minSpeed = std::min(statistics.minSpeed, speed);
 			statistics.maxSpeed = std::max(statistics.maxSpeed, speed);
-      currentPosXVec.record(pos.x);
-      currentPosYVec.record(pos.y);
-      currentSpeedVec.record(speed);
-      if (last_speed != -1) {
-        double acceleration = (speed - last_speed) / updateInterval;
-        double co2emission = calculateCO2emission(speed, acceleration);
-        currentAccelerationVec.record(acceleration);
-        currentCO2EmissionVec.record(co2emission);
+			currentPosXVec.record(pos.x);
+			currentPosYVec.record(pos.y);
+			currentSpeedVec.record(speed);
+			if (last_speed != -1) {
+				double acceleration = (speed - last_speed) / updateInterval;
+				double co2emission = calculateCO2emission(speed, acceleration);
+				currentAccelerationVec.record(acceleration);
+				currentCO2EmissionVec.record(co2emission);
 				statistics.totalCO2Emission+=co2emission * updateInterval.dbl();
-      }
-      last_speed = speed;
-    } else {
-      last_speed = -1;
-      speed = -1;
-    }
-  }
+			}
+			last_speed = speed;
+		} else {
+			last_speed = -1;
+			speed = -1;
+		}
+	}
 
 	pos = nextPos;
-  fixIfHostGetsOutside();
-  updatePosition();
+	fixIfHostGetsOutside();
+	updatePosition();
 }
 
 void TraCIMobility::fixIfHostGetsOutside()
 {
-  raiseErrorIfOutside();
+	raiseErrorIfOutside();
 }
 
 double TraCIMobility::calculateCO2emission(double v, double a) {
-  // Calculate CO2 emission parameters according to:
-  // Cappiello, A. and Chabini, I. and Nam, E.K. and Lue, A. and Abou Zeid, M., "A statistical model of vehicle emissions and fuel consumption," IEEE 5th International Conference on Intelligent Transportation Systems (IEEE ITSC), pp. 801-809, 2002
+	// Calculate CO2 emission parameters according to:
+	// Cappiello, A. and Chabini, I. and Nam, E.K. and Lue, A. and Abou Zeid, M., "A statistical model of vehicle emissions and fuel consumption," IEEE 5th International Conference on Intelligent Transportation Systems (IEEE ITSC), pp. 801-809, 2002
 
-  double A = 1000 * 0.1326; // W/m/s
+	double A = 1000 * 0.1326; // W/m/s
         double B = 1000 * 2.7384e-03; // W/(m/s)^2
-  double C = 1000 * 1.0843e-03; // W/(m/s)^3
-  double M = 1325.0; // kg
+	double C = 1000 * 1.0843e-03; // W/(m/s)^3
+	double M = 1325.0; // kg
 
-  // power in W
-  double P_tract = A*v + B*v*v + C*v*v*v + M*a*v; // for sloped roads: +M*g*sin_theta*v
+	// power in W
+	double P_tract = A*v + B*v*v + C*v*v*v + M*a*v; // for sloped roads: +M*g*sin_theta*v
 
-  /*
-  // "Category 7 vehicle" (e.g. a '92 Suzuki Swift)
-  double alpha = 1.01;
-  double beta = 0.0162;
-  double delta = 1.90e-06;
-  double zeta = 0.252;
-  double alpha1 = 0.985;
-  */
+	/*
+	// "Category 7 vehicle" (e.g. a '92 Suzuki Swift)
+	double alpha = 1.01;
+	double beta = 0.0162;
+	double delta = 1.90e-06;
+	double zeta = 0.252;
+	double alpha1 = 0.985;
+	*/
 
-  // "Category 9 vehicle" (e.g. a '94 Dodge Spirit)
-  double alpha = 1.11;
-  double beta = 0.0134;
-  double delta = 1.98e-06;
-  double zeta = 0.241;
-  double alpha1 = 0.973;
+	// "Category 9 vehicle" (e.g. a '94 Dodge Spirit)
+	double alpha = 1.11;
+	double beta = 0.0134;
+	double delta = 1.98e-06;
+	double zeta = 0.241;
+	double alpha1 = 0.973;
 
-  if (P_tract <= 0) return alpha1;
-  return alpha + beta*v*3.6 + delta*v*v*v*(3.6*3.6*3.6) + zeta*a*v;
+	if (P_tract <= 0) return alpha1;
+	return alpha + beta*v*3.6 + delta*v*v*v*(3.6*3.6*3.6) + zeta*a*v;
 }
 
