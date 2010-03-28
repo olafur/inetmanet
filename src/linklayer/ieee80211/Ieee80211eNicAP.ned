@@ -1,5 +1,6 @@
 //
 // Copyright (C) 2006 Andras Varga
+// Copyright (C) 2009 Lukáš Hlůže   lukas@hluze.cz
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -43,6 +44,7 @@ module Ieee80211eNicAP
         }
         mac: Ieee80211eMac {
             parameters:
+                queueModule = "mgmt";
                 @display("p=96,155;");
         }
         radio: Ieee80211Radio {

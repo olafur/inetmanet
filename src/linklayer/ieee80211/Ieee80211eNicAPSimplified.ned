@@ -44,6 +44,7 @@ module Ieee80211eNicAPSimplified
          }
         mac: Ieee80211eMac {
             parameters:
+                queueModule = "mgmt";                
                 @display("p=96,155");
         }
         radio: Ieee80211Radio {
