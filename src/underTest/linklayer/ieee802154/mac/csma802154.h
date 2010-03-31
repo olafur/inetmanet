@@ -51,10 +51,12 @@
  */
 class  csma802154 : public Ieee802154Mac
 {
-  public:
 
+	Ieee802154Frame *sendPacket;
+    PHYenum phystatus;
+  public:
 	virtual int    numInitStages    () const { return 3; }
-	csma802154(){};
+	csma802154(){sendPacket = NULL;}
 	~csma802154();
 
     /** @brief Initialization of the module and some variables*/
@@ -258,6 +260,17 @@ class  csma802154 : public Ieee802154Mac
     /** @brief The bit length of the ACK packet.*/
     int ackLength;
 
+
+
+    void sendNewPacketInTx(Ieee802154Frame *p)
+    {
+    	if (sendPacket)
+    		error("the previous packet is not send yet");
+    	if (phystatus==phy_TX_ON)
+    		sendDown(p);
+    	else
+    		sendPacket = p;
+    }
 
 protected:
 	// FSM functions

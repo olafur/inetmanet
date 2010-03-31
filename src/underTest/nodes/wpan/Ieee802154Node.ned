@@ -7,7 +7,6 @@ import inet.underTest.wpan.networklayer.Ieee802154StarRouting.Ieee802154StarRout
 import inet.battery.InetSimpleBattery;
 import inet.underTest.applications.Ieee802154TestApp.Ieee802154TestApp;
 import inet.mobility.BasicMobility;
-import inet.mobility.BasicMobility;
 import inet.base.NotificationBoard;
 import inet.underTest.wpan.Isabel.Base.Display;
 

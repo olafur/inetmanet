@@ -135,6 +135,7 @@ void Ieee802154Phy::initialize(int stage)
         numCurrRx = 0;
 
         phyRadioState = phy_RX_ON;
+        PLME_SET_TRX_STATE_confirm(phyRadioState);
         rs.setState(RadioState::IDLE);
         //rs.setChannelNumber((int)def_phyCurrentChannel); // default: 11, 2.4G
         rs.setBitrate(getRate('b'));
@@ -550,6 +551,7 @@ void Ieee802154Phy::handleLowerMsgEnd(AirFrame * airframe)
 			{
 				// dely <aTurnaroundTime> symbols for Rx2Tx
 				phyRadioState = phy_TRX_OFF;
+		        PLME_SET_TRX_STATE_confirm(phyRadioState);
 				setRadioState(RadioState::SLEEP); // radio disabled during TRx turnaround
 				if(TRX_timer->isScheduled())	cancelEvent(TRX_timer);
     				scheduleAt(simTime() + aTurnaroundTime/getRate('s'), TRX_timer);
@@ -587,6 +589,7 @@ void Ieee802154Phy::handleSelfMsg(cMessage *msg)
 				if (newState_turnaround == phy_TRX_OFF)
 				{
 					phyRadioState = phy_TRX_OFF;
+			        PLME_SET_TRX_STATE_confirm(phyRadioState);
 					setRadioState(RadioState::SLEEP);
 					PLME_SET_TRX_STATE_confirm(phy_TRX_OFF);
 				}
@@ -594,6 +597,7 @@ void Ieee802154Phy::handleSelfMsg(cMessage *msg)
 				{
 					// dely <aTurnaroundTime> symbols for Rx2Tx
 					phyRadioState = phy_TRX_OFF;
+			        PLME_SET_TRX_STATE_confirm(phyRadioState);
 					setRadioState(RadioState::SLEEP);		// radio disabled during TRx turnaround
 					if(TRX_timer->isScheduled())	cancelEvent(TRX_timer);
 					scheduleAt(simTime() + aTurnaroundTime/getRate('s'), TRX_timer);
@@ -714,6 +718,7 @@ void Ieee802154Phy::handle_PLME_SET_TRX_STATE_request(PHYenum setState)
 		{
 			tmp_state = (curr_state == phy_TRX_OFF)? phy_TRX_OFF:phy_SUCCESS;
 			phyRadioState = phy_TRX_OFF; // turn off radio immediately
+	        PLME_SET_TRX_STATE_confirm(phyRadioState);
 			setRadioState(RadioState::SLEEP);
 
 			// a packet is being received, force it terminated
@@ -758,6 +763,7 @@ void Ieee802154Phy::handle_PLME_SET_TRX_STATE_request(PHYenum setState)
 				// curr: TRX_OFF,	set: RX_ON or TX_ON
 			{
 				phyRadioState = setState;
+		        PLME_SET_TRX_STATE_confirm(phyRadioState);
 				if (setState == phy_TRX_OFF)
 					setRadioState(RadioState::SLEEP);
 				else
@@ -768,6 +774,7 @@ void Ieee802154Phy::handle_PLME_SET_TRX_STATE_request(PHYenum setState)
 		if (delay)
 		{
 			phyRadioState = phy_TRX_OFF;
+	        PLME_SET_TRX_STATE_confirm(phyRadioState);
 			setRadioState(RadioState::SLEEP);	//should be disabled immediately (further transmission/reception will not succeed)
 			scheduleAt(simTime() + aTurnaroundTime/getRate('s'), TRX_timer);
 			return; // send back a confirm when turnaround finishes

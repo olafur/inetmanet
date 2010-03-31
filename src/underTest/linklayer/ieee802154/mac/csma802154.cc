@@ -100,6 +100,8 @@ void csma802154::initialize(int stage) {
 		mpNb->subscribe(this, NF_RADIO_CHANNEL_CHANGED);
 		radioState = RadioState::IDLE;
 
+		// obtain pointer to external queue
+       	initializeQueueModule();
 
 		useMACAcks = par("useMACAcks").boolValue();
 		queueLength = par("queueLength");
@@ -123,7 +125,7 @@ void csma802154::initialize(int stage) {
 		ccaDetectionTime = par("ccaDetectionTime").doubleValue();
 		rxSetupTime = par("rxSetupTime").doubleValue();
 		aTurnaroundTime = par("aTurnaroundTime").doubleValue();
-		bitrate = par("bitrate");
+		bitrate = getRate('b');//par("bitrate");
 		ackLength = par("ackLength");
 		ackMessage = NULL;
 
@@ -150,7 +152,7 @@ void csma802154::initialize(int stage) {
 		}
 		NB = 0;
 
-		txPower = par("txPower").doubleValue();
+		// txPower = par("txPower").doubleValue();
 
 
 		nicId = getParentModule()->getId();
@@ -429,7 +431,8 @@ void csma802154::updateStatusCCA(t_mac_event event, cMessage *msg) {
 			Ieee802154Frame * mac = check_and_cast<Ieee802154Frame *>(macQueue.front()->dup());
 			//sendDown(msg);
 			// give time for the radio to be in Tx state before transmitting
-			sendDelayed(mac, aTurnaroundTime, mLowergateOut);
+			//sendDelayed(mac, aTurnaroundTime, mLowergateOut);
+			sendNewPacketInTx(mac);
 			nbTxFrames++;
 		} else {
 			// Channel was busy, increment 802.15.4 backoff timers as specified.
@@ -611,7 +614,8 @@ void csma802154::updateStatusSIFS(t_mac_event event, cMessage *msg) {
 		<< " sendAck -> TRANSMITACK." << endl;
 		updateMacState(TRANSMITACK_7);
 		//attachSignal(ackMessage, simTime());
-		sendDown(ackMessage);
+		//sendDown(ackMessage);
+		sendNewPacketInTx(ackMessage);
 		nbTxAcks++;
 		//		sendDelayed(ackMessage, aTurnaroundTime, lowergateOut);
 		ackMessage = NULL;
@@ -916,6 +920,16 @@ void csma802154::handleLowerMsg(cMessage *msg) {
 void csma802154::handleLowerControl(cMessage *msg) {
 	if (msg->getKind() == PD_DATA_CONFIRM)
 		executeMac(EV_FRAME_TRANSMITTED, msg);
+	else if (msg->getKind() == PLME_SET_TRX_STATE_CONFIRM)
+	{
+		Ieee802154MacPhyPrimitives* primitive = check_and_cast<Ieee802154MacPhyPrimitives *>(msg);
+		phystatus = PHYenum(primitive->getStatus());
+		if (primitive->getStatus()==phy_TX_ON && sendPacket)
+		{
+			sendDown(sendPacket);
+			sendPacket=NULL;
+		}
+	}
 
 	/*
 	if (msg->getKind() == MacToPhyInterface::TX_OVER) {
@@ -981,7 +995,8 @@ void csma802154::receiveChangeNotification(int category, const cPolymorphic *det
 
     	case NF_RADIO_CHANNEL_CHANGED:
     		ppib.phyCurrentChannel = check_and_cast<RadioState *>(details)->getChannelNumber();
-    		phy_bitrate = getRate('b');
+    		bitrate = getRate('b');
+    		phy_bitrate = bitrate;
     		phy_symbolrate = getRate('s');
     		bPeriod = aUnitBackoffPeriod / phy_symbolrate;
     		break;
