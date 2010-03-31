@@ -120,7 +120,7 @@ Bottom-up:
    
    underTest/           aditional protocols, the protocols in this directrory can be disable without problems
                         the actual list of protocols in this directory are:
-                        	802.15.4 
+                        	802.15.4 (becon mode file Ieee8215Mac.cc and csma mode file csma802154.cc)
                         	Wimax (partial functionality)
                         	New Ieee80211 Management Stack for INETMANET in Omnet++ 4.0
                         	rstp (Rapid Spanning Tree Protocol)
