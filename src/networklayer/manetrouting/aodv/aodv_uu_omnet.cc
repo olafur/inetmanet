@@ -959,7 +959,7 @@ void NS_CLASS setRefreshRoute(const Uint128 &src,const Uint128 &dest,const Uint1
 			struct in_addr  ip_src;
 			node_addr.s_addr = src;
 			ip_src.s_addr = prev;
-			rt_table_insert(node_addr, ip_src,0,0, ACTIVE_ROUTE_TIMEOUT, VALID, RT_INET_DEST,NS_DEV_NR);
+			rt_table_insert(node_addr, ip_src,0,0, ACTIVE_ROUTE_TIMEOUT, VALID, 0,NS_DEV_NR);
 		}
 		if (gtw!=0)
 		{

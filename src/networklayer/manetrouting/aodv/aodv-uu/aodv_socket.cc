@@ -644,7 +644,7 @@ void NS_CLASS aodv_socket_send(AODV_msg * aodv_msg, struct in_addr dst,
 
 	/* Do not print hello msgs... */
 	if (!(aodv_msg->type == AODV_RREP && (dst.s_addr == AODV_BROADCAST)))
-	DEBUG(LOG_INFO, 0, "AODV msg to %s ttl=%d size=%u",
+	DEBUG(LOG_INFO, 0, "AODV msg to %s ttl=%d retval=%u size=%u",
 		  ip_to_str(dst), ttl, retval, len);
 
 	return;

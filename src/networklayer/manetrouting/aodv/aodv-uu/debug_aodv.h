@@ -22,6 +22,7 @@
 #ifndef _DEBUG_H
 #define _DEBUG_H
 
+#include <stdio.h>
 #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__) || defined(_WIN64)
 #define LOG_DEBUG 0
 #define LOG_NOTICE 0
@@ -49,7 +50,6 @@ void log_pkt_fields(AODV_msg * msg);
 void print_rt_table(void *arg);
 void log_rt_table_init();
 char *ip_to_str(struct in_addr addr);
-
 #ifdef NS_PORT
 void write_to_log_file(char *msg, int len);
 char *devs_ip_to_str();
@@ -73,7 +73,7 @@ const char *state_to_str(u_int8_t state);
 #ifdef DEBUG
 #undef DEBUG
 #endif
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #undef DEBUG
