@@ -859,8 +859,14 @@ void Ieee80211egMac::handleWithFSM(cMessage *msg)
                 oldcurrentAC = currentAC;
 		        cancelAIFSPeriod();
             );
-            FSMA_Event_Transition(AIFS-Over,
+            /*FSMA_Event_Transition(AIFS-Over,
                                   isMsgAIFS(msg) && backoff[currentAC],
+                                  BACKOFF,
+                if (isInvalidBackoffPeriod())
+                    generateBackoffPeriod();
+            );*/
+            FSMA_Event_Transition(AIFS-Over-backoff,
+                                  isMsgAIFS(msg),
                                   BACKOFF,
                 if (isInvalidBackoffPeriod())
                     generateBackoffPeriod();
