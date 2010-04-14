@@ -199,6 +199,22 @@ RREP& RREP::operator=(const RREP& m)
 	return *this;
 }
 
+std::string RREP::detailedInfo() const
+{
+ 	std::stringstream out;
+ 	int timeToLive = ttl;
+ 	int hops = hcnt;
+	out << " RREP "  << "\n"; // Khmm...
+	out <<" Source :"<< orig_addr.getIPAddress() << "\n";
+	out <<" Destination :"<< dest_addr.getIPAddress()<< "\n";
+    out <<" Destination seq num:"<< dest_seqno << "\n";
+	out <<" TTL :"<< timeToLive << "\n";
+	out <<" hops :"<< hops << "\n";
+  	return out.str();
+}
+
+
+
 Register_Class(RREP_ack);
 RREP_ack::RREP_ack(const RREP_ack& m) : AODV_msg()
 {
@@ -242,5 +258,19 @@ RREQ& RREQ::operator=(const RREQ& m)
 	return *this;
 }
 
+std::string RREQ::detailedInfo() const
+{
+ 	std::stringstream out;
+ 	int timeToLive = ttl;
+ 	int hops = hcnt;
+	out << " RREQ "  << "\n"; // Khmm...
+	out <<" Source :"<< orig_addr.getIPAddress() << "\n";
+    out <<" Source seq num:"<< orig_seqno << "\n";
+	out <<" Destination :"<< dest_addr.getIPAddress()<< "\n";
+    out <<" Destination seq num:"<< dest_seqno << "\n";
+	out <<" TTL :"<< timeToLive << "\n";
+	out <<" hops :"<< hops << "\n";
+  	return out.str();
+}
 
 

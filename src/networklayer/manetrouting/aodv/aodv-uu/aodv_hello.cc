@@ -199,6 +199,7 @@ void NS_CLASS hello_send(void *arg)
 	    }
 	    dest.s_addr = AODV_BROADCAST;
 #ifdef OMNETPP
+	    rrep->ttl=1;
 	    aodv_socket_send((AODV_msg *) rrep, dest, msg_size, 1, &DEV_NR(i),delay);
 #else
 	    aodv_socket_send((AODV_msg *) rrep, dest, msg_size, 1, &DEV_NR(i));
