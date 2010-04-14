@@ -422,7 +422,6 @@ void Ieee80211eMac::initializeQueueModule()
  */
 void Ieee80211eMac::handleSelfMsg(cMessage *msg)
 {
-    int result;
     EV << "received self message: " << msg << "(kind: " << msg->getKind() << ")" << endl;
 
     if (msg == endReserve)
@@ -444,8 +443,8 @@ void Ieee80211eMac::handleSelfMsg(cMessage *msg)
     	EV <<" kind is " << kind << ",name is " << msg->getName() <<endl;
     	for (i = 3; i > kind; i--)  //mozna prochaze jen 3..kind XXX
     	{
-    		if (( endBackoff[i]->isScheduled() &&  endBackoff[i]->getArrivalTime() == simTime())
-    				|| ( endAIFS[i]->isScheduled() && !backoff[i] &&endAIFS[i]->getArrivalTime() == simTime() )
+    		if (((endBackoff[i]->isScheduled() &&  endBackoff[i]->getArrivalTime() == simTime())
+    				|| ( endAIFS[i]->isScheduled() && !backoff[i] &&endAIFS[i]->getArrivalTime() == simTime()))
                        && !transmissionQueue[i].empty())
     		{
     			EV << "Internal collision AC" << kind << " with AC" << i << endl;
@@ -735,6 +734,7 @@ void Ieee80211eMac::handleWithFSM(cMessage *msg)
         FSMA_State(IDLE)
         {
             FSMA_Enter(sendDownPendingRadioConfigMsg());
+/*
             if (fixFSM)
             {
             FSMA_Event_Transition(Data-Ready,
@@ -746,15 +746,17 @@ void Ieee80211eMac::handleWithFSM(cMessage *msg)
                ASSERT(false);
 
             );
+
             FSMA_No_Event_Transition(Immediate-Data-Ready,
                                      //!transmissionQueue.empty(),
-				!transmissionQueueEmpty() ,
+				!transmissionQueueEmpty() && (backoffPeriod[currentAC]>0 || ),
                                      DEFER,
-                invalidateBackoffPeriod();
-				ASSERT(backoff);
+               // invalidateBackoffPeriod();
+//				ASSERT(backoff[currentAC]);
 
             );
             }
+*/
             FSMA_Event_Transition(Data-Ready,
                                   isUpperMsg(msg),
                                   DEFER,
@@ -790,12 +792,10 @@ void Ieee80211eMac::handleWithFSM(cMessage *msg)
         FSMA_State(WAITAIFS)
         {
             FSMA_Enter(scheduleAIFSPeriod());
-            if(getCurrentTransmission())
-        	{
-
             FSMA_Event_Transition(EDCAF-Do-Nothing,
 			          isMsgAIFS(msg) && transmissionQueue[currentAC].empty(),
 				  WAITAIFS,
+				  ASSERT(0==1);
             ;);
 			FSMA_Event_Transition(Immediate-Transmit-RTS,
                                   isMsgAIFS(msg) && !transmissionQueue[currentAC].empty() && !isBroadcast(getCurrentTransmission())
@@ -819,7 +819,6 @@ void Ieee80211eMac::handleWithFSM(cMessage *msg)
                 oldcurrentAC = currentAC;
 		        cancelAIFSPeriod();
             );
-        	}
             FSMA_Event_Transition(AIFS-Over,
                                   isMsgAIFS(msg) && backoff[currentAC],
                                   BACKOFF,
