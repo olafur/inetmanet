@@ -484,6 +484,7 @@ void IP::routeMulticastPacket(IPDatagram *datagram, InterfaceEntry *destIE, Inte
 
 void IP::reassembleAndDeliver(IPDatagram *datagram)
 {
+
     // reassemble the packet (if fragmented)
     if (datagram->getFragmentOffset()!=0 || datagram->getMoreFragments())
     {
@@ -508,7 +509,11 @@ void IP::reassembleAndDeliver(IPDatagram *datagram)
 
     // decapsulate and send on appropriate output gate
     int protocol = datagram->getTransportProtocol();
-    cPacket *packet = decapsulateIP(datagram);
+    cPacket *packet=NULL;
+    if (protocol!=IP_PROT_DSR)
+    {
+    	packet = decapsulateIP(datagram);
+    }
 
     if (protocol==IP_PROT_ICMP)
     {

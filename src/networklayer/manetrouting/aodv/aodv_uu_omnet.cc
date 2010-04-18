@@ -654,12 +654,13 @@ void NS_CLASS recvAODVUUPacket(cMessage * msg)
 	int len = aodv_msg->getByteLength();
 	int ifIndex=NS_IFINDEX;
 
+	ttl =  aodv_msg->ttl-1;
 	if (!isInMacLayer())
 	{
 		IPControlInfo *ctrl = check_and_cast<IPControlInfo *>(msg->getControlInfo());
 		IPvXAddress srcAddr = ctrl->getSrcAddr();
 		IPvXAddress destAddr = ctrl->getDestAddr();
-		ttl =  ctrl->getTimeToLive();
+
 		src.s_addr = srcAddr.get4().getInt();
 		dst.s_addr =  destAddr.get4().getInt();
 		interfaceId = ctrl->getInterfaceId();
@@ -668,7 +669,6 @@ void NS_CLASS recvAODVUUPacket(cMessage * msg)
 	else
 	{
 		Ieee802Ctrl *ctrl = check_and_cast<Ieee802Ctrl *>(msg->getControlInfo());
-		ttl = aodv_msg->ttl;
 		src.s_addr = ctrl->getSrc();
 		dst.s_addr =  ctrl->getDest();
 	}

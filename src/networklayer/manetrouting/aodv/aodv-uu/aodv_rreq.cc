@@ -149,11 +149,13 @@ void NS_CLASS rreq_send(struct in_addr dest_addr, u_int32_t dest_seqno,
 			continue;
 		rreq = rreq_create(flags, dest_addr, dest_seqno, DEV_NR(i).ipaddr);
 
+
 #ifdef OMNETPP
-		aodv_socket_send((AODV_msg *) rreq, dest, RREQ_SIZE, ttl, &DEV_NR(i),delay);
+		rreq->ttl = ttl;
+		aodv_socket_send((AODV_msg *) rreq, dest, RREQ_SIZE, 1, &DEV_NR(i),delay);
 		totalRreqSend++;
 #else
-		aodv_socket_send((AODV_msg *) rreq, dest, RREQ_SIZE, ttl, &DEV_NR(i));
+		aodv_socket_send((AODV_msg *) rreq, dest, RREQ_SIZE, 1, &DEV_NR(i));
 #endif
 	}
 }
@@ -195,7 +197,8 @@ void NS_CLASS rreq_forward(RREQ * rreq, int size, int ttl)
 		continue;
             totalRreqSend++;
 	    RREQ * rreq_new = check_and_cast <RREQ*>(rreq->dup());
-            aodv_socket_send((AODV_msg *) rreq_new, dest, size, ttl, &DEV_NR(i),delay);
+	    rreq_new->ttl=ttl;
+        aodv_socket_send((AODV_msg *) rreq_new, dest, size, ttl, &DEV_NR(i),delay);
 #endif
 	}
 }

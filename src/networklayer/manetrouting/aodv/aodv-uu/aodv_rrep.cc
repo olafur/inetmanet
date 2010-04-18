@@ -194,7 +194,8 @@ void NS_CLASS rrep_send(RREP * rrep, rt_table_t * rev_rt,
     }
     totalRrepSend++;
 #endif
-    aodv_socket_send((AODV_msg *) rrep, rev_rt->next_hop, size, MAXTTL,
+    rrep->ttl=MAXTTL;
+    aodv_socket_send((AODV_msg *) rrep, rev_rt->next_hop, size, 1,
 		     &DEV_IFINDEX(rev_rt->ifindex));
 
     /* Update precursor lists */
@@ -257,7 +258,8 @@ void NS_CLASS rrep_forward(RREP * rrep, int size, rt_table_t * rev_rt,
 	RREP * rrep_new = check_and_cast <RREP *> (rrep->dup());
 	rrep_new->hcnt = fwd_rt->hcnt;
 	totalRrepSend++;
-	aodv_socket_send((AODV_msg *) rrep_new, rev_rt->next_hop, size, ttl,
+	rrep_new->ttl=ttl;
+	aodv_socket_send((AODV_msg *) rrep_new, rev_rt->next_hop, size, 1,
 			 &DEV_IFINDEX(rev_rt->ifindex));
 #endif
 	precursor_add(fwd_rt, rev_rt->next_hop);
@@ -396,8 +398,9 @@ void NS_CLASS rrep_process(RREP * rrep, int rreplen, struct in_addr ip_src,
 
 		rrep_ack = rrep_ack_create();
         	totalRrepAckSend++;
+        rrep_ack->ttl=MAXTTL;
 		aodv_socket_send((AODV_msg *) rrep_ack, fwd_rt->next_hop,
-			 NEXT_HOP_WAIT, MAXTTL, &DEV_IFINDEX(fwd_rt->ifindex));
+			 NEXT_HOP_WAIT, 1, &DEV_IFINDEX(fwd_rt->ifindex));
 	/* Remove RREP_ACK flag... */
 		rrep->a = 0;
 	}
@@ -451,6 +454,7 @@ void NS_CLASS rrep_process(RREP * rrep, int rreplen, struct in_addr ip_src,
 #endif
 				rerr = rerr_create(rerr_flags, fwd_rt->dest_addr,
 					   fwd_rt->dest_seqno);
+				rerr->ttl=1;
 				if (fwd_rt->nprec)
 				    aodv_socket_send((AODV_msg *) rerr, dest,
 					     RERR_CALC_SIZE(rerr), 1,

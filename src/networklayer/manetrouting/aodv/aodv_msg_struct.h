@@ -101,6 +101,7 @@ struct RREP : public AODV_msg {
 	RREP (const RREP &m);
 	RREP & 	operator= (const RREP &m);
 	virtual RREP *dup() const {return new RREP(*this);}
+	virtual std::string detailedInfo() const;
 } ;
 #define RREP_SIZE 20
 
@@ -132,6 +133,7 @@ struct RREQ : public AODV_msg {
 	RREQ (const RREQ &m);
 	RREQ & 	operator= (const RREQ &m);
 	virtual RREQ *dup() const {return new RREQ(*this);}
+	virtual std::string detailedInfo() const;
 };
 
 #define RREQ_SIZE 24

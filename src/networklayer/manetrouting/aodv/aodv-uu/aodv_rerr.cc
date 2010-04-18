@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Erik Nordström, <erik.nordstrom@it.uu.se>
+ * Authors: Erik Nordstrï¿½m, <erik.nordstrom@it.uu.se>
  *
  *
  *****************************************************************************/
@@ -212,6 +212,7 @@ void NS_CLASS rerr_process(RERR * rerr, int rerrlen,struct in_addr ip_src,
 	/* If a RERR was created, then send it now... */
 	if (new_rerr) {
 		rt = rt_table_find(rerr_unicast_dest);
+		new_rerr->ttl=1;
 
 		if (rt && new_rerr->dest_count == 1 && rerr_unicast_dest.s_addr!=0)
 			aodv_socket_send((AODV_msg *) new_rerr,
