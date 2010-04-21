@@ -228,14 +228,10 @@ class DSRUU:public cSimpleModule, public INotifiable {
 
 	typedef std::map<IPAddress, ETXEntry*> ETXNeighborTable;
 	struct ETXEntry
-    	{
-       		int numEtxRec;
-       		int numEtxRecPrev;
-		simtime_t time;
+	{
 		double deliveryDirect;
 		double deliveryReverse;
-		double etxCost;
-		int numRetry;
+		std::vector<simtime_t> timeVector;
 		//IPAddress address;
    	};
 // In dsr-uu-omnet.cc used for ETX

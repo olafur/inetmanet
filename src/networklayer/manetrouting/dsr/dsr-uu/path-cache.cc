@@ -461,7 +461,7 @@ ph_srt_add(struct dsr_srt *srt, usecs_t timeout, unsigned short flags)
 	if (!is_last)
 	{
 #ifdef OMNETPP
-		if(etxActive)
+		if(etxActive && srt->cost)
 		{
 			if (j<n)
 			{
