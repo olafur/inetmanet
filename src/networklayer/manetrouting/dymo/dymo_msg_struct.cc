@@ -108,8 +108,8 @@ Register_Class(Dymo_RE);
 
 Dymo_RE::Dymo_RE (const char *name) : DYMO_element (name)
 {
-	int bs = RE_BASIC_SIZE;
-	int size = bs*8;
+	//int bs = RE_BASIC_SIZE;
+	// int size = bs*8;
 	// setBitLength(size);
 	re_blocks = (struct re_block *)extension;
 }

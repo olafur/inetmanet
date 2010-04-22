@@ -806,9 +806,14 @@ void ManetRoutingBase::receiveChangeNotification(int category, const cPolymorphi
 		if (details==NULL)
 			return;
 		Ieee80211DataFrame *frame  = check_and_cast<Ieee80211DataFrame *>(details);
-		if (!mac_layer_ && frame->getEncapsulatedMsg())
+#if OMNETPP_VERSION > 0x0400
+		cPacket * pktAux = frame->getEncapsulatedPacket();
+#else
+		cPacket * pktAux = frame->getEncapsulatedMsg();
+#endif
+		if (!mac_layer_ && pktAux!=NULL)
 		{
-			cMessage *pkt = frame->getEncapsulatedMsg()->dup();
+			cPacket *pkt = pktAux->dup();
 			ControlInfoBreakLink *add = new ControlInfoBreakLink;
 			add->setDest(frame->getReceiverAddress());
 			pkt->setControlInfo(add);

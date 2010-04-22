@@ -76,7 +76,11 @@ IPDatagram *IPFragBuf::addFragment(IPDatagram *datagram, simtime_t now)
     // store datagram. Only one fragment carries the actual modelled
     // content (getEncapsulatedMsg()), other (empty) ones are only
     // preserved so that we can send them in ICMP if reassembly times out.
+#if OMNETPP_VERSION > 0x0400
+    if (datagram->getEncapsulatedPacket())
+#else
     if (datagram->getEncapsulatedMsg())
+#endif
     {
         delete buf->datagram;
         buf->datagram = datagram;

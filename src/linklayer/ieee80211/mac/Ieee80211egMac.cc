@@ -540,104 +540,113 @@ void Ieee80211egMac::handleUpperMsg(cPacket *msg)
 
 int Ieee80211egMac::MappingAccessCategory(Ieee80211DataOrMgmtFrame *frame)
 {
-    bool isDataFrame = dynamic_cast<Ieee80211DataFrame *>(frame) != NULL;
+	bool isDataFrame = dynamic_cast<Ieee80211DataFrame *>(frame) != NULL;
 
-    currentAC=defaultAC;
+	currentAC=defaultAC;
 
-    if (!isDataFrame)
-    {
-        currentAC=3;
-    }
-    else if (dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg()))
-    {
-        EV << "We obtain ip datagram, going to recognize access category.\n";
-    	IPDatagram *ipdata = check_and_cast<IPDatagram *>(frame->getEncapsulatedMsg());
-    	if (dynamic_cast<ICMPMessage *>(ipdata->getEncapsulatedMsg()))
-    	{
-    		EV << "We recognize icmp message in ip datagram.\n";
-    		currentAC = 1;
-    	}
-    	else if (dynamic_cast<UDPPacket *>(ipdata->getEncapsulatedMsg()))
-    	{
-    		EV << "We reconize udp packet.\n";
-    		UDPPacket *udp = check_and_cast<UDPPacket *>(ipdata->getEncapsulatedMsg());
+#if OMNETPP_VERSION > 0x0400
+	IPDatagram *ipdata = dynamic_cast<IPDatagram *>(frame->getEncapsulatedPacket());
+#else
+	IPDatagram *ipdata = dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg());
+#endif
 
-    		if (udp->getDestinationPort() == 5000 || udp->getSourcePort() == 5000)  //voice
-    		{
-    			currentAC = 3;
-    		}
-    		if (udp->getDestinationPort() == 4000 || udp->getSourcePort() == 4000)  //video
-    		{
-    			currentAC = 2;
-    		}
-    		if (udp->getDestinationPort() == 80 || udp->getSourcePort() == 80)  //voice
-    		{
-    			currentAC = 1;
-    		}
-    		if (udp->getDestinationPort() == 21 || udp->getSourcePort() == 21)  //voice
-    		{
-    			currentAC = 0;
-    		}
-    	}
-    	else if (dynamic_cast<TCPSegment *>(ipdata->getEncapsulatedMsg()))
-    	{
-    		EV << "We recognize tcp segment.\n";
-    		TCPSegment *tcp = check_and_cast<TCPSegment *>(ipdata->getEncapsulatedMsg());
+	if (!isDataFrame)
+	{
+		currentAC=3;
+	}
+	else if (ipdata)
+	{
+#if OMNETPP_VERSION > 0x0400
+		ICMPMessage *icmp = dynamic_cast<ICMPMessage *>(ipdata->getEncapsulatedPacket());
+		UDPPacket *udp = dynamic_cast<UDPPacket *>(ipdata->getEncapsulatedPacket());
+		TCPSegment *tcp = dynamic_cast<TCPSegment *>(ipdata->getEncapsulatedPacket());
+#else
+		ICMPMessage *icmp = dynamic_cast<ICMPMessage *>(ipdata->getEncapsulatedMsg());
+		UDPPacket *udp = dynamic_cast<UDPPacket *>(ipdata->getEncapsulatedMsg());
+		TCPSegment *tcp = dynamic_cast<TCPSegment *>(ipdata->getEncapsulatedMsg());
+#endif
 
-    		if (tcp->getDestPort() == 80 || tcp->getSrcPort() == 80)
-    		{
-    			currentAC = 1;
-    		}
-    		if (tcp->getDestPort() == 21 || tcp->getSrcPort() == 21)
-    		{
-    			currentAC = 0;
-    		}
-    		if (tcp->getDestPort() == 4000 || tcp->getSrcPort() == 4000)
-    		{
-    			currentAC = 2;
-    		}
-    		if (tcp->getDestPort() == 5000 || tcp->getSrcPort() == 5000)
-    		{
-    			currentAC = 3;
-    		}
-    	}
-    	else {
+		EV << "We obtain ip datagram, going to recognize access category.\n";
+		if (icmp)
+		{
+			EV << "We recognize icmp message in ip datagram.\n";
+			currentAC = 1;
+		}
+		else if (udp)
+		{
+			EV << "We reconize udp packet.\n";
+			if (udp->getDestinationPort() == 5000 || udp->getSourcePort() == 5000)  //voice
+			{
+				currentAC = 3;
+			}
+			if (udp->getDestinationPort() == 4000 || udp->getSourcePort() == 4000)  //video
+			{
+				currentAC = 2;
+			}
+			if (udp->getDestinationPort() == 80 || udp->getSourcePort() == 80)  //voice
+			{
+				currentAC = 1;
+			}
+			if (udp->getDestinationPort() == 21 || udp->getSourcePort() == 21)  //voice
+			{
+				currentAC = 0;
+			}
+		}
+		else if (tcp)
+		{
+			EV << "We recognize tcp segment.\n";
+			if (tcp->getDestPort() == 80 || tcp->getSrcPort() == 80)
+			{
+				currentAC = 1;
+			}
+			if (tcp->getDestPort() == 21 || tcp->getSrcPort() == 21)
+			{
+				currentAC = 0;
+			}
+			if (tcp->getDestPort() == 4000 || tcp->getSrcPort() == 4000)
+			{
+				currentAC = 2;
+			}
+			if (tcp->getDestPort() == 5000 || tcp->getSrcPort() == 5000)
+			{
+				currentAC = 3;
+			}
+		}
+		else {
 
-    	};
-    }
-    // check for queue overflow
-    if (isDataFrame && maxQueueSize && (int)transmissionQueue[currentAC].size() >= maxQueueSize)
-    {
-    	EV << "message " << frame << " received from higher layer but AC queue is full, dropping message\n";
-    	numDropped[currentAC]++;
-    	delete frame;
-    	return 200;
-    }
-    if (isDataFrame)
-    {
-    	transmissionQueue[currentAC].push_back(frame);
-    }
-    else
-    {
-    	if (transmissionQueue[currentAC].empty() || transmissionQueue[currentAC].size() == 1)
-    	{
-    		transmissionQueue[currentAC].push_back(frame);
-    	}
-    	else
-    	{
-    		std::list<Ieee80211DataOrMgmtFrame*>::iterator p;
-    		//we don't know if first frame in the queue is in middle of transmission
-    		//so for sure we placed it on second place
-    		p=transmissionQueue[currentAC].begin();
-    		p++;
-    		transmissionQueue[currentAC].insert(p,frame);
-    	}
-    }
-
-    EV << "frame classified as access category "<< currentAC <<" (0 background, 1 best effort, 2 video, 3 voice)\n";
-    return true;
+		};
+	}
+	// check for queue overflow
+	if (isDataFrame && maxQueueSize && (int)transmissionQueue[currentAC].size() >= maxQueueSize)
+	{
+		EV << "message " << frame << " received from higher layer but AC queue is full, dropping message\n";
+		numDropped[currentAC]++;
+		delete frame;
+		return 200;
+	}
+	if (isDataFrame)
+	{
+		transmissionQueue[currentAC].push_back(frame);
+	}
+	else
+	{
+		if (transmissionQueue[currentAC].empty() || transmissionQueue[currentAC].size() == 1)
+		{
+			transmissionQueue[currentAC].push_back(frame);
+		}
+		else
+		{
+			std::list<Ieee80211DataOrMgmtFrame*>::iterator p;
+			//we don't know if first frame in the queue is in middle of transmission
+			//so for sure we placed it on second place
+			p=transmissionQueue[currentAC].begin();
+			p++;
+			transmissionQueue[currentAC].insert(p,frame);
+		}
+	}
+	EV << "frame classified as access category "<< currentAC <<" (0 background, 1 best effort, 2 video, 3 voice)\n";
+	return true;
 }
-
 
 void Ieee80211egMac::handleCommand(cMessage *msg)
 {
@@ -865,7 +874,7 @@ void Ieee80211egMac::handleWithFSM(cMessage *msg)
                 if (isInvalidBackoffPeriod())
                     generateBackoffPeriod();
             );*/
-            FSMA_Event_Transition(AIFS-Over-backoff,
+            FSMA_Event_Transition(AIFS-Over,
                                   isMsgAIFS(msg),
                                   BACKOFF,
                 if (isInvalidBackoffPeriod())

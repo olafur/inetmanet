@@ -680,7 +680,7 @@ void DYMO::sendDown(cPacket* apMsg, int destAddr) {
 	// keep statistics
 	totalPacketsSent++;
 	totalBytesSent+=apMsg->getByteLength();
-	if (LL_MANET_ROUTERS.getInt()==destAddr)
+	if (LL_MANET_ROUTERS.getInt()==(unsigned int)destAddr)
 	{
 		destAddr = IPAddress::ALLONES_ADDRESS.getInt();
 		sendToIp(apMsg, UDPPort, destAddr, UDPPort,1, SIMTIME_DBL(jitter),0);

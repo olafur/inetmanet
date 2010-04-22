@@ -73,8 +73,11 @@ int IPSerializer::serialize(const IPDatagram *dgram, unsigned char *buf, unsigne
         EV << "Serializing an IP packet with options. Dropping the options.\n";
 
     packetLength = IP_HEADER_BYTES;
-
+#if OMNETPP_VERSION > 0x0400
+    cMessage *encapPacket = dgram->getEncapsulatedPacket();
+#else
     cMessage *encapPacket = dgram->getEncapsulatedMsg();
+#endif
     switch (dgram->getTransportProtocol())
     {
       case IP_PROT_ICMP:

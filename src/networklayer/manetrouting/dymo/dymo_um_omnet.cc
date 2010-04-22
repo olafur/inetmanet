@@ -887,10 +887,13 @@ void DYMOUM::processPromiscuous(const cPolymorphic *details)
 		struct in_addr gatewayAddr;
 
 		frame  = check_and_cast<Ieee80211DataOrMgmtFrame *>(details);
-
+#if OMNETPP_VERSION > 0x0400
+		if (!isInMacLayer())
+			ip_msg = dynamic_cast<IPDatagram *>(frame->getEncapsulatedPacket());
+#else
 		if (!isInMacLayer())
 			ip_msg = dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg());
-
+#endif
 		/////////////////////////////////////
 		/////////////////////////////////////
 		/////////////////////////////////////
@@ -980,11 +983,21 @@ void DYMOUM::processPromiscuous(const cPolymorphic *details)
 			{
 				if (ip_msg && ip_msg->getTransportProtocol()==IP_PROT_MANET)
 				{
+#if OMNETPP_VERSION > 0x0400
+					dymo_msg = dynamic_cast<DYMO_element *>(ip_msg->getEncapsulatedPacket()->getEncapsulatedPacket());
+#else
 					dymo_msg = dynamic_cast<DYMO_element *>(ip_msg->getEncapsulatedMsg()->getEncapsulatedMsg());
+#endif
 				}
 			}
 			else
+			{
+#if OMNETPP_VERSION > 0x0400
+				dymo_msg = dynamic_cast<DYMO_element *>(frame->getEncapsulatedPacket());
+#else
 				dymo_msg = dynamic_cast<DYMO_element *>(frame->getEncapsulatedMsg());
+#endif
+			}
 			if (dymo_msg)
 			{
 				// check if RREP
@@ -1020,7 +1033,11 @@ void DYMOUM::processFullPromiscuous(const cPolymorphic *details)
 				addr.s_addr = (*it).second;
 			else
 			{
+#if OMNETPP_VERSION > 0x0400
+				IPDatagram * ip_msg = dynamic_cast<IPDatagram *>(frame->getEncapsulatedPacket());
+#else
 				IPDatagram * ip_msg = dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg());
+#endif
 				if (ip_msg && ip_msg->getTransportProtocol()==IP_PROT_MANET)
 				{
 					unsigned int ip_src = ip_msg->getSrcAddress().getInt();
@@ -1057,17 +1074,31 @@ void DYMOUM::processFullPromiscuous(const cPolymorphic *details)
 			DYMO_element * dymo_msg;
 			if (!isInMacLayer())
 			{
+#if OMNETPP_VERSION > 0x0400
+				ip_msg = dynamic_cast<IPDatagram *>(frame->getEncapsulatedPacket());
+#else
 				ip_msg = dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg());
+#endif
 				if (ip_msg)
 				{
 					if (ip_msg->getTransportProtocol()==IP_PROT_MANET)
 					{
+#if OMNETPP_VERSION > 0x0400
+						dymo_msg = dynamic_cast<DYMO_element *>(ip_msg->getEncapsulatedPacket()->getEncapsulatedPacket());
+#else
 						dymo_msg = dynamic_cast<DYMO_element *>(ip_msg->getEncapsulatedMsg()->getEncapsulatedMsg());
+#endif
 					}
 				}
 			}
 			else
+			{
+#if OMNETPP_VERSION > 0x0400
+				dymo_msg = dynamic_cast<DYMO_element *>(frame->getEncapsulatedPacket());
+#else
 				dymo_msg = dynamic_cast<DYMO_element *>(frame->getEncapsulatedMsg());
+#endif
+			}
 			if (dymo_msg)
 			{
 				// check if RREP
@@ -1244,8 +1275,9 @@ void DYMOUM::packetFailedMac(Ieee80211DataFrame *dgram)
 
 	src_addr.s_addr = dgram->getAddress3();
 	dest_addr.s_addr = dgram->getAddress4();
-
+#ifndef MAPROUTINGTABLE
 	dlist_head_t *pos;
+#endif
 	int count = 0;
 	rtable_entry_t *rt = rtable_find(dest_addr);
 	if (rt)

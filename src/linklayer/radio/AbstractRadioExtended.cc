@@ -586,7 +586,11 @@ void AbstractRadioExtended::handleLowerMsgEnd(AirFrameExtended * airframe)
         //    delete airframe;
         if (!radioModel->isReceivedCorrectly(airframe, list))
         {
+#if OMNETPP_VERSION > 0x0400
+            airframe->getEncapsulatedPacket()->setKind(list.size()>1 ? COLLISION : BITERROR);
+#else
             airframe->getEncapsulatedMsg()->setKind(list.size()>1 ? COLLISION : BITERROR);
+#endif
             airframe->setName(list.size()>1 ? "COLLISION" : "BITERROR");
 
             numGivenUp++;

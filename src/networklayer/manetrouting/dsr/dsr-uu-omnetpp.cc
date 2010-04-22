@@ -732,10 +732,17 @@ void DSRUU::receiveChangeNotification(int category, const cPolymorphic *details)
     {
 		Enter_Method("Dsr Link Break");
 		Ieee80211DataFrame *frame  = check_and_cast<Ieee80211DataFrame *>(details);
+#if OMNETPP_VERSION > 0x0400
+		if (dynamic_cast<IPDatagram *>(frame->getEncapsulatedPacket()))
+			dgram = check_and_cast<IPDatagram *>(frame->getEncapsulatedPacket());
+		else
+			return;
+#else
 		if (dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg()))
 			dgram = check_and_cast<IPDatagram *>(frame->getEncapsulatedMsg());
 		else
 			return;
+#endif
 		if (!get_confval(UseNetworkLayerAck))
 		{
 			packetFailed(dgram);
@@ -750,9 +757,19 @@ void DSRUU::receiveChangeNotification(int category, const cPolymorphic *details)
 			if (dynamic_cast<Ieee80211DataFrame *>(const_cast<cPolymorphic*>(details)))
 			{
 				Ieee80211DataFrame *frame  = check_and_cast<Ieee80211DataFrame *>(details);
-				if (dynamic_cast<DSRPkt *>(frame->getEncapsulatedMsg())){
+#if OMNETPP_VERSION > 0x0400
+				if (dynamic_cast<DSRPkt *>(frame->getEncapsulatedPacket()))
+#else
+				if (dynamic_cast<DSRPkt *>(frame->getEncapsulatedMsg()))
+#endif
+				{
 
+#if OMNETPP_VERSION > 0x0400
+					DSRPkt *paux = check_and_cast <DSRPkt *> (frame->getEncapsulatedPacket());
+#else
 					DSRPkt *paux = check_and_cast <DSRPkt *> (frame->getEncapsulatedMsg());
+#endif
+
 					DSRPkt *p = check_and_cast <DSRPkt *> (paux->dup());
 					take (p);
 					EV << "####################################################\n";
@@ -1120,7 +1137,7 @@ void DSRUU::ExpandCost(struct dsr_pkt *dp)
 		dp->costVector = new EtxCost[1];
 		dp->costVector[0].address=myAddress;
 #ifndef MobilityFramework
-		double cost = getCost (IPAddress::IPAddress((uint32_t)dp->src.s_addr));
+		double cost = getCost (IPAddress((uint32_t)dp->src.s_addr));
 #else
 		double cost = getCost (dp->src.s_addr);
 #endif
@@ -1197,14 +1214,14 @@ void DSRUU::AddCost(struct dsr_pkt *dp,struct dsr_srt *srt)
 	{
 		add =srt->addrs[i];
 #ifndef MobilityFramework
-		dp->costVector[i].address=IPAddress::IPAddress((uint32_t)add.s_addr);
+		dp->costVector[i].address = IPAddress((uint32_t)add.s_addr);
 #else
 		dp->costVector[i].address= add.s_addr;
 #endif
 		dp->costVector[i].cost=srt->cost[i];
 	}
 #ifndef MobilityFramework
-	dp->costVector[srt->cost_size-1].address=IPAddress::IPAddress((uint32_t)srt->dst.s_addr);
+	dp->costVector[srt->cost_size-1].address=IPAddress((uint32_t)srt->dst.s_addr);
 #else
 	dp->costVector[srt->cost_size-1].address=srt->dst.s_addr;
 #endif

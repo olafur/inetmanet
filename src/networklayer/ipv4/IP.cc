@@ -146,7 +146,13 @@ void IP::handlePacketFromNetwork(IPDatagram *datagram)
 	}
 
 	if (eth_ci!=NULL && eth_ci->getDest().isBroadcast()) {
-		if (dynamic_cast<UDPPacket*>(datagram->getEncapsulatedMsg())) {
+#if OMNETPP_VERSION > 0x0400
+		UDPPacket *udpPkt = dynamic_cast<UDPPacket* >(datagram->getEncapsulatedPacket());
+#else
+		UDPPacket *udpPkt = dynamic_cast<UDPPacket* >(datagram->getEncapsulatedMsg());
+#endif
+		if (udpPkt)
+		{
 			EV << "IP UDP Helper. Allowing local delivery" << endl;
 			numLocalDeliver++;
 			reassembleAndDeliver(datagram);
@@ -200,7 +206,11 @@ void IP::handleReceivedICMP(ICMPMessage *msg)
         case ICMP_TIME_EXCEEDED:
         case ICMP_PARAMETER_PROBLEM: {
             // ICMP errors are delivered to the appropriate higher layer protocol
-            IPDatagram *bogusPacket = check_and_cast<IPDatagram *>(msg->getEncapsulatedMsg());
+#if OMNETPP_VERSION > 0x0400
+        	IPDatagram *bogusPacket = check_and_cast<IPDatagram *>(msg->getEncapsulatedPacket());
+#else
+        	IPDatagram *bogusPacket = check_and_cast<IPDatagram *>(msg->getEncapsulatedMsg());
+#endif
             int protocol = bogusPacket->getTransportProtocol();
             int gateindex = mapping.getOutputGateForProtocol(protocol);
             send(msg, "transportOut", gateindex);

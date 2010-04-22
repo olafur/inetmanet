@@ -1194,6 +1194,18 @@ bool LDP::lookupLabel(IPDatagram *ipdatagram, LabelOpVector& outLabel, std::stri
     if (protocol == IP_PROT_OSPF)
         return false;
 
+#if OMNETPP_VERSION > 0x0400
+    // LDP traffic (both discovery...
+    if (protocol == IP_PROT_UDP && check_and_cast<UDPPacket*>(ipdatagram->getEncapsulatedPacket())->getDestinationPort() == LDP_PORT)
+        return false;
+
+    // ...and session)
+    if (protocol == IP_PROT_TCP && check_and_cast<TCPSegment*>(ipdatagram->getEncapsulatedPacket())->getDestPort() == LDP_PORT)
+        return false;
+    if (protocol == IP_PROT_TCP && check_and_cast<TCPSegment*>(ipdatagram->getEncapsulatedPacket())->getSrcPort() == LDP_PORT)
+        return false;
+
+#else
     // LDP traffic (both discovery...
     if (protocol == IP_PROT_UDP && check_and_cast<UDPPacket*>(ipdatagram->getEncapsulatedMsg())->getDestinationPort() == LDP_PORT)
         return false;
@@ -1203,6 +1215,8 @@ bool LDP::lookupLabel(IPDatagram *ipdatagram, LabelOpVector& outLabel, std::stri
         return false;
     if (protocol == IP_PROT_TCP && check_and_cast<TCPSegment*>(ipdatagram->getEncapsulatedMsg())->getSrcPort() == LDP_PORT)
         return false;
+
+#endif
 
     // regular traffic, classify, label etc.
 
