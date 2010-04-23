@@ -509,14 +509,17 @@ void Ieee80211eMac::handleUpperMsg(cPacket *msg)
 int Ieee80211eMac::MappingAccessCategory(Ieee80211DataOrMgmtFrame *frame)
 {
 	bool isDataFrame = dynamic_cast<Ieee80211DataFrame *>(frame) != NULL;
-
+	IPDatagram *ipdata = NULL;
 	currentAC=defaultAC;
 
+	if (isDataFrame)
+	{
 #if OMNETPP_VERSION > 0x0400
-	IPDatagram *ipdata = dynamic_cast<IPDatagram *>(frame->getEncapsulatedPacket());
+		ipdata = dynamic_cast<IPDatagram *>(frame->getEncapsulatedPacket());
 #else
-	IPDatagram *ipdata = dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg());
+		ipdata = dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg());
 #endif
+	}
 
 	if (!isDataFrame)
 	{

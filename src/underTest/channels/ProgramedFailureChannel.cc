@@ -64,7 +64,7 @@ bool ProgramedFailureChannel::initializeChannel(int stage) {
 
 #if OMNETPP_VERSION>0x0400
 void ProgramedFailureChannel::process(cMessage *msg, simtime_t at, result_t &result) {
-	cDatarateChannel::process(msg,at,result);
+	cDatarateChannel::processMessage(msg,at,result);
 }
 #else
 bool ProgramedFailureChannel::deliver(cMessage *msg, simtime_t at) {

@@ -29,8 +29,7 @@ Define_Module( MACRelayUnitSTPNP );
 
 const MACAddress MACRelayUnitSTPNP::STPMCAST_ADDRESS("01:80:C2:00:00:00");
 
-MACRelayUnitSTPNP::MACRelayUnitSTPNP() {
-	MACRelayUnitNP::MACRelayUnitNP();
+MACRelayUnitSTPNP::MACRelayUnitSTPNP(): MACRelayUnitNP(){
 	this->active = false;
 	this->hello_timer = NULL;
 	this->topology_change_timeout = 0;
@@ -398,7 +397,11 @@ void MACRelayUnitSTPNP::handleMessage(cMessage* msg) {
 	} else {
 		if (this->active) {
 			if (dynamic_cast<EtherFrame*>(msg)) {
+#if OMNETPP_VERSION>0x0400
+				cPacket* frame = ((EtherFrame*)msg)->getEncapsulatedPacket();
+#else
 				cPacket* frame = ((EtherFrame*)msg)->getEncapsulatedMsg();
+#endif
 				if (dynamic_cast<BPDU*>(frame)) {
 					cPacket* frame = ((EtherFrame*)msg)->decapsulate();
 					BPDU* bpdu = dynamic_cast<BPDU*>(frame);

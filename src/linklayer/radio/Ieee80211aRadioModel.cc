@@ -284,7 +284,7 @@ bool Ieee80211aRadioModel::isReceivedCorrectly(AirFrame *airframe, const SnrList
         EV << "COLLISION! Packet got lost. Noise only\n";
         return false;
     }
-    else if (isPacketOK(buffer,snirMin, airframe->getBitLength(), airframe->getBitrate()))
+    else if (isPacketOK(buffer,snirMin, frame->getBitLength(), airframe->getBitrate()))
     {
         EV << "packet was received correctly, it is now handed to upper layer...\n";
 	   // for(int i=0;i<airframe->getBitLength();i++)
