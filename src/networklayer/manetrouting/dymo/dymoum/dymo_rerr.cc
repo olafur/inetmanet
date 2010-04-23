@@ -72,8 +72,9 @@ void NS_CLASS rerr_send(struct in_addr addr, int ttl, rtable_entry_t *entry)
 
 	if (entry)
 	{
+#ifndef MAPROUTINGTABLE
 		dlist_head_t *pos;
-
+#endif
 		blocks[0].unode_seqnum = entry->rt_seqnum;
 #ifndef MAPROUTINGTABLE
 		dlist_for_each(pos, &rtable.l)
@@ -263,9 +264,9 @@ void NS_CLASS rerr_send(struct in_addr addr, int ttl, rtable_entry_t *entry,stru
 
 	if (entry)
 	{
-		dlist_head_t *pos;
 		blocks[0].unode_seqnum = entry->rt_seqnum;
 #ifndef MAPROUTINGTABLE
+		dlist_head_t *pos;
 		dlist_for_each(pos, &rtable.l)
 		{
 			rtable_entry_t *e = (rtable_entry_t *) pos;

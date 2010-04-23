@@ -732,10 +732,17 @@ void DSRUU::receiveChangeNotification(int category, const cPolymorphic *details)
     {
 		Enter_Method("Dsr Link Break");
 		Ieee80211DataFrame *frame  = check_and_cast<Ieee80211DataFrame *>(details);
+#if OMNETPP_VERSION > 0x0400
+		if (dynamic_cast<IPDatagram *>(frame->getEncapsulatedPacket()))
+			dgram = check_and_cast<IPDatagram *>(frame->getEncapsulatedPacket());
+		else
+			return;
+#else
 		if (dynamic_cast<IPDatagram *>(frame->getEncapsulatedMsg()))
 			dgram = check_and_cast<IPDatagram *>(frame->getEncapsulatedMsg());
 		else
 			return;
+#endif
 		if (!get_confval(UseNetworkLayerAck))
 		{
 			packetFailed(dgram);
@@ -750,9 +757,19 @@ void DSRUU::receiveChangeNotification(int category, const cPolymorphic *details)
 			if (dynamic_cast<Ieee80211DataFrame *>(const_cast<cPolymorphic*>(details)))
 			{
 				Ieee80211DataFrame *frame  = check_and_cast<Ieee80211DataFrame *>(details);
-				if (dynamic_cast<DSRPkt *>(frame->getEncapsulatedMsg())){
+#if OMNETPP_VERSION > 0x0400
+				if (dynamic_cast<DSRPkt *>(frame->getEncapsulatedPacket()))
+#else
+				if (dynamic_cast<DSRPkt *>(frame->getEncapsulatedMsg()))
+#endif
+				{
 
+#if OMNETPP_VERSION > 0x0400
+					DSRPkt *paux = check_and_cast <DSRPkt *> (frame->getEncapsulatedPacket());
+#else
 					DSRPkt *paux = check_and_cast <DSRPkt *> (frame->getEncapsulatedMsg());
+#endif
+
 					DSRPkt *p = check_and_cast <DSRPkt *> (paux->dup());
 					take (p);
 					EV << "####################################################\n";
@@ -941,7 +958,7 @@ int DSRUU::RouteAdd(struct dsr_srt *srt, unsigned long timeout,unsigned short fl
 
 void DSRUU::EtxMsgSend(unsigned long data)
 {
-	EtxList neigh[10];
+	EtxList neigh[15];
 	DSRPktExt* msg = new DSRPktExt();
 #ifndef MobilityFramework
 	IPAddress destAddress_var(DSR_BROADCAST);
@@ -965,54 +982,27 @@ void DSRUU::EtxMsgSend(unsigned long data)
 	msg->setTtl (1); // TTL
 #endif
 	int numNeighbor=0;
-	ETXNeighborTable::iterator iter = etxNeighborTable.begin();
-	ETXNeighborTable::iterator iter2 = etxNeighborTable.end();
-	ETXNeighborTable::iterator iterTemp;
-	simtime_t time = simTime();
-	while (iter != iter2)
+	for (ETXNeighborTable::iterator iter = etxNeighborTable.begin();iter!=etxNeighborTable.end();)
 	{
 		// remove old data
 		ETXEntry *entry = (*iter).second;
-		if (simTime()-entry->time>(etxWindowSize*1.5))
+		while (simTime()-entry->timeVector.front()>etxWindowSize)
+			entry->timeVector.erase (entry->timeVector.begin());
+		if (entry->timeVector.size()==0)
 		{
-			iterTemp = iter ;
-			++iter;
-			etxNeighborTable.erase(iterTemp );
+			linkFailed((*iter).first);
+			etxNeighborTable.erase(iter);
+			iter = etxNeighborTable.begin();
 			continue;
 		}
 
-		if (etxNumRetry!=-1)
-		{
-			entry->numRetry--;
-			if (entry->numRetry<=0)
-			{
-				linkFailed((*iter).first);
-			}
-		}
-
-		if (((int)etxWindow%(int)etxWindowSize)==0)
-		{
-			// Reset window
-			entry->numEtxRecPrev=(*iter).second->numEtxRec;
-			entry->numEtxRec=0;
-		}
-
-		int num_win = static_cast<int> (etxWindow/etxWindowSize);
-		double interval;
-		interval = SIMTIME_DBL(time) - (num_win*etxWindowSize);
-
-		if (interval<0)
-			interval =0;
-		double delivery=0;
-		if ((interval/etxWindowSize<0.35) && entry->numEtxRecPrev>0)
-			delivery = (entry->numEtxRecPrev)/(etxWindowSize/etxTime);
-		else
-			delivery = ((entry->numEtxRec/(interval/etxTime))*etxWindowSize)/(etxWindowSize/etxTime);
-		if (delivery>1)
+		double delivery;
+		delivery = entry->timeVector.size()/(etxWindowSize/etxTime);
+		if (delivery>0.99)
 			delivery=1;
-
 		entry->deliveryDirect=delivery;
-		if (numNeighbor<10)
+
+		if (numNeighbor<15)
 		{
 			neigh[numNeighbor].address=(*iter).first;
 			neigh[numNeighbor].delivery = delivery; //(uint32_t)(delivery*0xFFFF); // scale
@@ -1024,7 +1014,7 @@ void DSRUU::EtxMsgSend(unsigned long data)
 		{
 			// delete
 			int aux=0;
-			for (int i=1;i<10;i++)
+			for (int i=1;i<15;i++)
 			{
 				if (neigh[i].delivery<neigh[aux].delivery)
 					aux=i;
@@ -1037,8 +1027,7 @@ void DSRUU::EtxMsgSend(unsigned long data)
 				printf("\recojones");
 			}
 		}
-
-		++iter;
+		iter++;
 	}
 
 	EtxList *list = msg->addExtension(numNeighbor);
@@ -1056,14 +1045,7 @@ void DSRUU::EtxMsgSend(unsigned long data)
 void DSRUU::EtxMsgProc(cMessage *m)
 {
 	DSRPktExt *msg;
-	int num_win = static_cast<int> (etxWindow/etxWindowSize);
-	double interval;
 	int pos=-1;
-
-	interval = SIMTIME_DBL(simTime())-(num_win*etxWindowSize);
-	if (interval<0)
-		interval = SIMTIME_DBL(simTime())-((num_win-1)*etxWindowSize); //Previous window
-
 	msg=dynamic_cast<DSRPktExt*>(m);
 	EtxList *list = msg->getExtension();
 	int size = msg->getSizeExtension();
@@ -1084,67 +1066,36 @@ void DSRUU::EtxMsgProc(cMessage *m)
 			break;
 		}
 	}
-
 	ETXNeighborTable::iterator it = etxNeighborTable.find(srcAddress);
-
+	ETXEntry *entry=NULL;
 	if (it==etxNeighborTable.end())
 	{
 		// add
-		ETXEntry *entry = new ETXEntry();
-		entry->numEtxRecPrev=0;
-		entry->numEtxRec=1;
-		entry->time=simTime();
-		if (etxNumRetry!=-1)
-		{
-			entry->numRetry=etxNumRetry;
-		}
+		entry = new ETXEntry();
 		//entry->address=msg->getSrcAddress();
 		etxNeighborTable.insert(std::make_pair(srcAddress,entry));
-		double delivery;
-		if ((interval/etxWindowSize<0.25) && entry->numEtxRecPrev>0)
-			delivery = entry->numEtxRecPrev/(etxWindowSize/etxTime);
-		else
-			delivery = ((entry->numEtxRec/(interval/etxTime))*etxWindowSize)/(etxWindowSize/etxTime);
-		if (delivery>1)
-			delivery=1;
-		entry->deliveryDirect=delivery;
-		if (pos!=-1)
-		{
-			//unsigned int cost = (unsigned int) list[pos].delivery;
-			//entry->deliveryReverse= ((double)cost)/0xFFFF;
-			entry->deliveryReverse = list[pos].delivery;
-			if (entry->deliveryDirect<=0)
-				printf("Cojones");
-		}
+
 	}
 	else
 	{
-		ETXEntry *entry = (*it).second;
-		entry->numEtxRec++;
-		entry->time=simTime();
-		if (etxNumRetry!=-1)
-			entry->numRetry=etxNumRetry;
-/*  Computed in send
-		double delivery;
-
-		if ((interval/etxWindowSize<0.25) && (*it).second->numEtxRecPrev>0)
-			delivery = ((*it).second->numEtxRecPrev)/(etxWindowSize/etxTime);
-		else
-			delivery = (((*it).second->numEtxRec/(interval/etxTime))*etxWindowSize)/(etxWindowSize/etxTime);
-
-		(*it).second->deliveryDirect=delivery;
-*/
-		if (pos!=-1)
-		{
-			//unsigned int cost;
-			//cost = (unsigned int) list[pos].delivery;
-			//(*it).second->deliveryReverse= ((double) cost)/0xFFFF;
-			entry->deliveryReverse=list[pos].delivery;
-			if (entry->deliveryDirect<=0)
-				printf("\n mas cojones");
-		}
+		entry = (*it).second;
+		while (simTime()-entry->timeVector.front()>etxWindowSize)
+			entry->timeVector.erase (entry->timeVector.begin());
 	}
-
+	double delivery;
+	entry->timeVector.push_back(simTime());
+	delivery = entry->timeVector.size()/(etxWindowSize/etxTime);
+	if (delivery>0.99)
+		delivery=1;
+	entry->deliveryDirect=delivery;
+	if (pos!=-1)
+	{
+		//unsigned int cost = (unsigned int) list[pos].delivery;
+		//entry->deliveryReverse= ((double)cost)/0xFFFF;
+		entry->deliveryReverse = list[pos].delivery;
+		if (entry->deliveryDirect<=0)
+			printf("Cojones");
+	}
 	delete m;
 }
 
@@ -1186,7 +1137,7 @@ void DSRUU::ExpandCost(struct dsr_pkt *dp)
 		dp->costVector = new EtxCost[1];
 		dp->costVector[0].address=myAddress;
 #ifndef MobilityFramework
-		double cost = getCost (IPAddress::IPAddress((uint32_t)dp->src.s_addr));
+		double cost = getCost (IPAddress((uint32_t)dp->src.s_addr));
 #else
 		double cost = getCost (dp->src.s_addr);
 #endif
@@ -1263,14 +1214,14 @@ void DSRUU::AddCost(struct dsr_pkt *dp,struct dsr_srt *srt)
 	{
 		add =srt->addrs[i];
 #ifndef MobilityFramework
-		dp->costVector[i].address=IPAddress::IPAddress((uint32_t)add.s_addr);
+		dp->costVector[i].address = IPAddress((uint32_t)add.s_addr);
 #else
 		dp->costVector[i].address= add.s_addr;
 #endif
 		dp->costVector[i].cost=srt->cost[i];
 	}
 #ifndef MobilityFramework
-	dp->costVector[srt->cost_size-1].address=IPAddress::IPAddress((uint32_t)srt->dst.s_addr);
+	dp->costVector[srt->cost_size-1].address=IPAddress((uint32_t)srt->dst.s_addr);
 #else
 	dp->costVector[srt->cost_size-1].address=srt->dst.s_addr;
 #endif

@@ -66,13 +66,21 @@ void Decider80211::handleLowerMsg(AirFrame *af, SnrList& receivedList)
         if (iter->snr < snirMin)
             snirMin = iter->snr;
     }
+#if OMNETPP_VERSION > 0x0400
+    cMessage *fr = af->getEncapsulatedPacket();
+#else
     cMessage *fr = af->getEncapsulatedMsg();
+#endif
     EV << "packet (" << fr->getClassName() << ")" << fr->getName() << " (" << fr->info() << ") snrMin=" << snirMin << endl;
 
     //if snir is big enough so that packet can be recognized at all
     if (snirMin > snirThreshold)
     {
+#if OMNETPP_VERSION > 0x0400
+    	if (isPacketOK(snirMin, af->getEncapsulatedPacket()->getBitLength()))
+#else
         if (isPacketOK(snirMin, af->getEncapsulatedMsg()->getBitLength()))
+#endif
         {
             EV << "packet was received correctly, it is now handed to upper layer...\n";
             sendUp(af);
@@ -81,7 +89,11 @@ void Decider80211::handleLowerMsg(AirFrame *af, SnrList& receivedList)
         {
             EV << "Packet has BIT ERRORS! It is lost!\n";
             af->setName("ERROR");
+#if OMNETPP_VERSION > 0x0400
+            af->getEncapsulatedPacket()->setKind(BITERROR);
+#else
             af->getEncapsulatedMsg()->setKind(BITERROR);
+#endif
             sendUp(af);
         }
     }
@@ -89,7 +101,11 @@ void Decider80211::handleLowerMsg(AirFrame *af, SnrList& receivedList)
     {
         EV << "COLLISION! Packet got lost\n";
         af->setName("COLLISION");
+#if OMNETPP_VERSION > 0x0400
+        af->getEncapsulatedPacket()->setKind(COLLISION);
+#else
         af->getEncapsulatedMsg()->setKind(COLLISION);
+#endif
         sendUp(af);
     }
 }

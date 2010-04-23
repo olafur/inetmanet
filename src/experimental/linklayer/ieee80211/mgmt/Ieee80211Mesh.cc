@@ -1346,8 +1346,11 @@ void Ieee80211Mesh::mplsForwardData(int label,LWMPLSPacket *mpls_pk_ptr,MACAddre
 		mplsBasicSend(mpls_pk_ptr,sta_addr);
 		return;
 
-
+#if OMNETPP_VERSION > 0x0400
+		if (!(dynamic_cast<LWMPLSPacket*> (mpls_pk_ptr->getEncapsulatedPacket())))
+#else
 		if (!(dynamic_cast<LWMPLSPacket*> (mpls_pk_ptr->getEncapsulatedMsg())))
+#endif
 		{
 // Source or destination?
 
@@ -1385,7 +1388,11 @@ void Ieee80211Mesh::mplsForwardData(int label,LWMPLSPacket *mpls_pk_ptr,MACAddre
 		}
 		else
 		{
+#if OMNETPP_VERSION > 0x0400
+			if (dynamic_cast<LWMPLSPacket*>(mpls_pk_ptr->getEncapsulatedPacket ()))
+#else
 			if (dynamic_cast<LWMPLSPacket*>(mpls_pk_ptr->getEncapsulatedMsg ()))
+#endif
 			{
 				LWMPLSPacket *seg_pkptr =  dynamic_cast<LWMPLSPacket*>(mpls_pk_ptr->decapsulate());
 				seg_pkptr->setTTL(mpls_pk_ptr->getTTL());
@@ -1606,7 +1613,11 @@ void Ieee80211Mesh::mplsDataProcess(LWMPLSPacket * mpls_pk_ptr,MACAddress sta_ad
 			}
 			mplsData->setBroadCastCounter(MacToUint64(mpls_pk_ptr->getSource()),newCounter);
 			// send up and Resend
+#if OMNETPP_VERSION > 0x0400
+			sendUp(mpls_pk_ptr->getEncapsulatedPacket()->dup());
+#else
 			sendUp(mpls_pk_ptr->getEncapsulatedMsg()->dup());
+#endif
 			sendOrEnqueue(encapsulate(mpls_pk_ptr,MACAddress::BROADCAST_ADDRESS));
 			break;
    	}
@@ -1794,7 +1805,12 @@ void Ieee80211Mesh::mplsPurge (LWmpls_Forwarding_Structure *forwarding_ptr,bool 
                     iter++;
                     continue;
 		}
+#if OMNETPP_VERSION > 0x0400
+		LWMPLSPacket* mplsmsg = dynamic_cast<LWMPLSPacket*>(frame->getEncapsulatedPacket());
+#else
 		LWMPLSPacket* mplsmsg = dynamic_cast<LWMPLSPacket*>(frame->getEncapsulatedMsg());
+#endif
+
 		if (mplsmsg!=NULL)
 		{
 			int label = mplsmsg->getLabel();
@@ -1887,7 +1903,11 @@ void Ieee80211Mesh::sendOut(cMessage *msg)
 
 bool Ieee80211Mesh::forwardMessage (Ieee80211DataFrame *frame)
 {
+#if OMNETPP_VERSION > 0x0400
+	cPacket *msg = frame->getEncapsulatedPacket();
+#else
 	cPacket *msg = frame->getEncapsulatedMsg();
+#endif
 	LWMPLSPacket *lwmplspk = dynamic_cast<LWMPLSPacket*> (msg);
 
 	if (lwmplspk)

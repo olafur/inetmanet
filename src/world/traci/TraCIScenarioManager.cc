@@ -80,6 +80,9 @@ void TraCIScenarioManager::initialize()
 		roiRects.push_back(std::pair<Coord, Coord>(Coord(x1,y1), Coord(x2, y2)));
 	}
 
+	nextNodeVectorIndex = 0;
+	hosts.clear();
+
 	executeOneTimestepTrigger = new cMessage("step");
 	scheduleAt(0, executeOneTimestepTrigger);
 
@@ -413,11 +416,15 @@ void TraCIScenarioManager::commandSetPolygonShape(std::string polyId, std::list<
 	if (!obuf.eof()) error("received additional bytes");
 }
 
+bool TraCIScenarioManager::commandAddVehicle(std::string vehicleId, std::string vehicleTypeId, std::string routeId, std::string laneId, float emitPosition, float emitSpeed) {
+	return queryTraCIOptional(CMD_ADDVEHICLE, TraCIBuffer() << vehicleId << vehicleTypeId << routeId << laneId << emitPosition << emitSpeed);
+}
+
 // name: host;Car;i=vehicle.gif
 void TraCIScenarioManager::addModule(int32_t nodeId, std::string type, std::string name, std::string displayString, const Coord& position, std::string road_id, double speed, double angle, double allowed_speed) {
 	if (hosts.find(nodeId) != hosts.end()) error("tried adding duplicate module");
 
-	int32_t nodeVectorIndex = nodeId;
+	int32_t nodeVectorIndex = nextNodeVectorIndex++;
 
 	cModule* parentmod = getParentModule();
 	if (!parentmod) error("Parent Module not found");
@@ -516,7 +523,7 @@ void TraCIScenarioManager::processUpdateObject(uint8_t domain, int32_t nodeId, T
 	cModule* mod = getManagedModule(nodeId);
 
 	// is it in the ROI?
-	bool inRoi = isInRegionOfInterest(p, edge, speed, angle, allowed_speed);
+	bool inRoi = isInRegionOfInterest(Coord(px, py), edge, speed, angle, allowed_speed);
 	if (!inRoi) {
 		if (mod) {
 			deleteModule(nodeId);

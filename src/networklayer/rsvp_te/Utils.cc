@@ -64,9 +64,13 @@ void append(std::vector<int>& dest, const std::vector<int>& src)
 
 cModule *getPayloadOwner(cPacket *msg)
 {
+#if OMNETPP_VERSION > 0x0400
+    while(msg->getEncapsulatedPacket())
+        msg = msg->getEncapsulatedPacket();
+#else
     while(msg->getEncapsulatedMsg())
         msg = msg->getEncapsulatedMsg();
-
+#endif
     if (msg->hasPar("owner"))
         return simulation.getModule(msg->par("owner"));
     else

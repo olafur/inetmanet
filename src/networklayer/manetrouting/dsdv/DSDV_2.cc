@@ -109,9 +109,6 @@ DSDV_2::~DSDV_2()
 void DSDV_2::handleMessage(cMessage *msg)
 {
 
-
-	forwardHello *fhp;
-	DSDV_HelloMessage *helloFor;
 	DSDV_HelloMessage * recHello=NULL;
 	// When DSDV module receives selfmessage (scheduled event)
 	// it means that it's time for Hello message broadcast event
@@ -224,6 +221,8 @@ void DSDV_2::handleMessage(cMessage *msg)
 			recHello = dynamic_cast<DSDV_HelloMessage *>(msg);
 			recHello->setControlInfo(controlInfo);
 #else
+			forwardHello *fhp;
+			DSDV_HelloMessage *helloFor;
 			fhp = new forwardHello();
 			fhp->hello = (DSDV_HelloMessage *) (dynamic_cast<DSDV_HelloMessage *>(msg))->dup();
 			fhp->hello = dynamic_cast<DSDV_HelloMessage *>(msg);

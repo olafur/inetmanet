@@ -172,7 +172,11 @@ void NAMTraceWriter::recordPacketEvent(char event, int peernamid, cPacket *msg)
 
     int size = msg->getByteLength();
     int color = 0;
+#if OMNETPP_VERSION > 0x0400
+    for (cPacket *em = msg; em; em = em->getEncapsulatedPacket())
+#else
     for (cPacket *em = msg; em; em = em->getEncapsulatedMsg())
+#endif
         if (em->hasPar("color"))
             {color = em->par("color").longValue(); break;}
 

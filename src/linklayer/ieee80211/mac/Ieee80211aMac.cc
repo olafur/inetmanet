@@ -478,15 +478,17 @@ void Ieee80211aMac::handleLowerMsg(cPacket *msg)
     }
     i++;
 
+    frame = dynamic_cast<Ieee80211Frame *>(msg);
     if (timeStampLastMessageReceived == 0)
         timeStampLastMessageReceived = simTime();
     else
     {
-        recvdThroughput+=((frame->getBitLength()/(simTime()-timeStampLastMessageReceived))/1000000)/samplingCoeff;
+        if (frame)
+            recvdThroughput+=((frame->getBitLength()/(simTime()-timeStampLastMessageReceived))/1000000)/samplingCoeff;
         timeStampLastMessageReceived = simTime();
     }
 
-    frame = dynamic_cast<Ieee80211Frame *>(msg);
+
     if (!frame)
     {
 #ifdef FRAMETYPESTOP

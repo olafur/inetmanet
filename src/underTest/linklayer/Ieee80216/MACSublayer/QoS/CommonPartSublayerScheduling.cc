@@ -82,8 +82,11 @@ void CommonPartSublayerScheduling::handleMessage(cMessage *msg)
         mac_entry_time->setName("mac_entry_time"); //for identifying parameter at receiver
         mac_entry_time->setDoubleValue(simTime().dbl());
         upper_msg->addPar(mac_entry_time);
-
+#if OMNETPP_VERSION>0x0400
+        IPDatagram* upper_ipd = check_and_cast<IPDatagram*>(upper_msg->getEncapsulatedPacket());
+#else
         IPDatagram* upper_ipd = check_and_cast<IPDatagram*>(upper_msg->getEncapsulatedMsg());
+#endif
         Ieee80216TGControlInformation* ipd_control =
             check_and_cast<Ieee80216TGControlInformation*>(upper_ipd->getControlInfo());
 
@@ -202,8 +205,11 @@ void CommonPartSublayerScheduling::doFIFOQueuing(int max_burst_size)
         {
             scheduled_packets_size += tmp_msg->getByteLength();
             //sum_fifo += tmp_msg->length();
-
+#if OMNETPP_VERSION>0x0400
+            IPDatagram* upper_ipd = check_and_cast<IPDatagram*>(tmp_msg->getEncapsulatedPacket());
+#else
             IPDatagram* upper_ipd = check_and_cast<IPDatagram*>(tmp_msg->getEncapsulatedMsg());
+#endif
             Ieee80216TGControlInformation* ipd_control =
                 check_and_cast<Ieee80216TGControlInformation*>(upper_ipd->getControlInfo());
 

@@ -1658,15 +1658,21 @@ SCTPDataMsg* SCTPAssociation::dequeueOutboundDataMsg(const int32 availableSpace,
 
             if (streamQ)
             {
+#if OMNETPP_VERSION > 0x0400
+                int32 b=ADD_PADDING( (check_and_cast<SCTPSimpleMessage*>(((SCTPDataMsg*)streamQ->front())->getEncapsulatedPacket())->getByteLength()+SCTP_DATA_CHUNK_LENGTH));
+#else
                 int32 b=ADD_PADDING( (check_and_cast<SCTPSimpleMessage*>(((SCTPDataMsg*)streamQ->front())->getEncapsulatedMsg())->getByteLength()+SCTP_DATA_CHUNK_LENGTH));
-
+#endif
                 /* check if chunk found in queue has to be fragmented */
                 if (b > (int32)state->assocPmtu - IP_HEADER_LENGTH - SCTP_COMMON_HEADER)
                 {
                     /* START FRAGMENTATION */
                     SCTPDataMsg* datMsgQueued = (SCTPDataMsg*)streamQ->pop();
+#if OMNETPP_VERSION > 0x0400
+                    SCTPSimpleMessage *datMsgQueuedSimple = check_and_cast<SCTPSimpleMessage*>(datMsgQueued->getEncapsulatedPacket());
+#else
                     SCTPSimpleMessage *datMsgQueuedSimple = check_and_cast<SCTPSimpleMessage*>(datMsgQueued->getEncapsulatedMsg());
-
+#endif
                     SCTPDataMsg* datMsgLastFragment = NULL;
                     uint32 offset = 0;
 
@@ -1756,7 +1762,12 @@ SCTPDataMsg* SCTPAssociation::dequeueOutboundDataMsg(const int32 availableSpace,
                     /* the next chunk returned will always be a fragment */
                     state->lastMsgWasFragment = true;
 
+
+#if OMNETPP_VERSION > 0x0400
+                    b=ADD_PADDING( (check_and_cast<SCTPSimpleMessage*>(((SCTPDataMsg*)streamQ->front())->getEncapsulatedPacket())->getBitLength()/8+SCTP_DATA_CHUNK_LENGTH));
+#else
                     b=ADD_PADDING( (check_and_cast<SCTPSimpleMessage*>(((SCTPDataMsg*)streamQ->front())->getEncapsulatedMsg())->getBitLength()/8+SCTP_DATA_CHUNK_LENGTH));
+#endif
                     /* FRAGMENTATION DONE */
                 }
 
@@ -1792,7 +1803,11 @@ SCTPDataMsg* SCTPAssociation::dequeueOutboundDataMsg(const int32 availableSpace,
     }
     if (datMsg != NULL)
     {
+#if OMNETPP_VERSION > 0x0400
+        qCounter.roomSumSendStreams -= ADD_PADDING( (check_and_cast<SCTPSimpleMessage*>(datMsg->getEncapsulatedPacket())->getBitLength()/8+SCTP_DATA_CHUNK_LENGTH));
+#else
         qCounter.roomSumSendStreams -= ADD_PADDING( (check_and_cast<SCTPSimpleMessage*>(datMsg->getEncapsulatedMsg())->getBitLength()/8+SCTP_DATA_CHUNK_LENGTH));
+#endif
         qCounter.bookedSumSendStreams -= datMsg->getBooksize();
     }
     return (datMsg);
@@ -1826,8 +1841,11 @@ bool SCTPAssociation::nextChunkFitsIntoPacket(int32 bytes)
 
         if (streamQ)
         {
+#if OMNETPP_VERSION > 0x0400
+            int32 b=ADD_PADDING( (check_and_cast<SCTPSimpleMessage*>(((SCTPDataMsg*)streamQ->front())->getEncapsulatedPacket())->getByteLength()+SCTP_DATA_CHUNK_LENGTH));
+#else
             int32 b=ADD_PADDING( (check_and_cast<SCTPSimpleMessage*>(((SCTPDataMsg*)streamQ->front())->getEncapsulatedMsg())->getByteLength()+SCTP_DATA_CHUNK_LENGTH));
-
+#endif
             /* Check if next message would be fragmented */
             if (b > (int32) state->assocPmtu - IP_HEADER_LENGTH - SCTP_COMMON_HEADER)
             {

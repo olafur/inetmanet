@@ -336,8 +336,13 @@ void UDP::processICMPError(cPacket *msg)
         type = icmpMsg->getType();
         code = icmpMsg->getCode();
         // Note: we must NOT use decapsulate() because payload in ICMP is conceptually truncated
+#if OMNETPP_VERSION > 0x0400
+        IPDatagram *datagram = check_and_cast<IPDatagram *>(icmpMsg->getEncapsulatedPacket());
+        UDPPacket *packet = check_and_cast<UDPPacket *>(datagram->getEncapsulatedPacket());
+#else
         IPDatagram *datagram = check_and_cast<IPDatagram *>(icmpMsg->getEncapsulatedMsg());
         UDPPacket *packet = check_and_cast<UDPPacket *>(datagram->getEncapsulatedMsg());
+#endif
         localAddr = datagram->getSrcAddress();
         remoteAddr = datagram->getDestAddress();
         localPort = packet->getSourcePort();
@@ -350,8 +355,13 @@ void UDP::processICMPError(cPacket *msg)
         type = icmpMsg->getType();
         code = -1; // FIXME this is dependent on getType()...
         // Note: we must NOT use decapsulate() because payload in ICMP is conceptually truncated
+#if OMNETPP_VERSION > 0x0400
+        IPv6Datagram *datagram = check_and_cast<IPv6Datagram *>(icmpMsg->getEncapsulatedPacket());
+        UDPPacket *packet = check_and_cast<UDPPacket *>(datagram->getEncapsulatedPacket());
+#else
         IPv6Datagram *datagram = check_and_cast<IPv6Datagram *>(icmpMsg->getEncapsulatedMsg());
         UDPPacket *packet = check_and_cast<UDPPacket *>(datagram->getEncapsulatedMsg());
+#endif
         localAddr = datagram->getSrcAddress();
         remoteAddr = datagram->getDestAddress();
         localPort = packet->getSourcePort();
@@ -433,7 +443,11 @@ void UDP::processUDPPacket(UDPPacket *udpPacket)
     int matches = 0;
 
     // deliver a copy of the packet to each matching socket
+#if OMNETPP_VERSION > 0x0400
+    cPacket *payload = udpPacket->getEncapsulatedPacket();
+#else
     cPacket *payload = udpPacket->getEncapsulatedMsg();
+#endif
     if (dynamic_cast<IPControlInfo *>(ctrl)!=NULL)
     {
         IPControlInfo *ctrl4 = (IPControlInfo *)ctrl;

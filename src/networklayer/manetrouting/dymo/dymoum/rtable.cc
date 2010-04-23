@@ -528,7 +528,6 @@ int NS_CLASS rtable_expire_timeout(rtable_entry_t *entry)
 
 int NS_CLASS rtable_expire_timeout_all(struct in_addr nxthop_addr, u_int32_t ifindex)
 {
-	dlist_head_t *pos;
 	int count = 0;
 
 	for (DymoRoutingTable::iterator it = dymoRoutingTable.begin();it != dymoRoutingTable.end();it++)

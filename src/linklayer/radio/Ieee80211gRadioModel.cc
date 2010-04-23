@@ -598,7 +598,11 @@ bool Ieee80211gRadioModel::isReceivedCorrectly(AirFrame *airframe, const SnrList
         if (iter->snr < snirMin)
             snirMin = iter->snr;
 
+#if OMNETPP_VERSION > 0x0400
+    cPacket *frame = airframe->getEncapsulatedPacket();
+#else
     cPacket *frame = airframe->getEncapsulatedMsg();
+#endif
     EV << "packet (" << frame->getClassName() << ")" << frame->getName() << " (" << frame->info() << ") snrMin=" << snirMin << endl;
 
 	if(i%1000==0){
@@ -613,7 +617,7 @@ bool Ieee80211gRadioModel::isReceivedCorrectly(AirFrame *airframe, const SnrList
         EV << "COLLISION! Packet got lost. Noise only\n";
         return false;
     }
-    else if (isPacketOK(snirMin, airframe->getEncapsulatedMsg()->getBitLength(), airframe->getBitrate()))
+    else if (isPacketOK(snirMin, frame->getBitLength(), airframe->getBitrate()))
     {
         EV << "packet was received correctly, it is now handed to upper layer...\n";
         return true;

@@ -204,8 +204,11 @@ void RTPProfile::dataIn(RTPInnerPacket *rinp)
 {
     ev << "dataIn(RTPInnerPacket *rinp) Enter"<<endl;
     processIncomingPacket(rinp);
-
+#if OMNETPP_VERSION > 0x0400
+    RTPPacket *packet = check_and_cast<RTPPacket *>(rinp->getEncapsulatedPacket());
+#else
     RTPPacket *packet = check_and_cast<RTPPacket *>(rinp->getEncapsulatedMsg());
+#endif
 
     uint32 ssrc = packet->getSSRC();
 

@@ -1528,7 +1528,7 @@ void RSVP::processPathTearMsg(RSVPPathTear *msg)
 
     for (PSBVector::iterator it = PSBList.begin(); it != PSBList.end(); it++)
     {
-        if (it->OutInterface.getInt() != lspid)
+        if (it->OutInterface.getInt() != (uint32)lspid)
             continue;
 
         // merging backup exists

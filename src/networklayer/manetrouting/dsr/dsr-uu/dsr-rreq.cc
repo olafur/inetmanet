@@ -458,9 +458,9 @@ rreq_tbl_add_id(struct in_addr initiator, struct in_addr target,
  			list_for_each(pos, &id_entry->rreq_id_tbl_routes.head)
 			{
 				id_r = (struct id_entry_route *)pos;
-				if (id_r->length<length)
+				if ((int)id_r->length<length)
 					goto out;
-				if (id_r->length==length && memcmp(id_r->add,addr,length)==0)
+				if ((int)id_r->length==length && memcmp(id_r->add,addr,length)==0)
 					goto out;
 			}
 			id_r = (struct id_entry_route *)MALLOC(sizeof(struct id_entry_route), GFP_ATOMIC);
@@ -938,7 +938,7 @@ list_t *head;
 head = &rreq_tbl.head;
 list_for_each(pos1, head) {
 		struct rreq_tbl_entry *e = (struct rreq_tbl_entry *)pos1;
-		struct id_entry *id_e;
+//		struct id_entry *id_e;
 		if (e->timer->testAndExcute(msg))
 			return;
 	}

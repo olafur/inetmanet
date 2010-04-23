@@ -35,7 +35,11 @@ void IPv6ErrorHandling::initialize()
 void IPv6ErrorHandling::handleMessage(cMessage *msg)
 {
     ICMPv6Message *icmpv6Msg = check_and_cast<ICMPv6Message *>(msg);
+#if OMNETPP_VERSION > 0x0400
+    IPv6Datagram *d = check_and_cast<IPv6Datagram *>(icmpv6Msg->getEncapsulatedPacket());
+#else
     IPv6Datagram *d = check_and_cast<IPv6Datagram *>(icmpv6Msg->getEncapsulatedMsg());
+#endif
     int type = (int)icmpv6Msg->getType();
     int code;
     EV << " Type: " << type;
