@@ -20,7 +20,7 @@
 // ***************************************************************************
 
 package inet.linklayer.radio;
-simple PropagationModel
+simple PropagationModel like Radio
 {
     parameters:
 	  double TransmissionAntennaGainIndB @unit("dB") = default(0dB);  // Transmission Antenna Gain 

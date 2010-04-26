@@ -40,6 +40,7 @@ simple Ieee80211gRadio extends PropagationModel
         double bitrate @unit("bps"); // (in bits/s)
         double thermalNoise @unit("dBm") = default(-110dBm); // base noise level (dBm)
         double pathLossAlpha = default(2); // used by the path loss calculation
+        double shadowingDeviation @unit("dB") = default(0dB); // used by the shadowing model calculation
         double snirThreshold @unit("dB") = default(4dB); // if signal-noise ratio is below this threshold, frame is considered noise (in dB)
         double sensitivity @unit("dBm"); // received signals with power below sensitivity are ignored
         string berTableFile=default("");
