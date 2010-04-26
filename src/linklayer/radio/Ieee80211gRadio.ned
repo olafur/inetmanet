@@ -56,8 +56,4 @@ simple Ieee80211gRadio extends PropagationModel
         double usage_radio_sleep @unit(mA) = default (-1mA); // disable battery registration 
         double usage_radio_send @unit(mA) = default (-1mA); // disable battery registration 
         
-    gates:
-        input uppergateIn;   // from higher layer protocol (MAC)
-        output uppergateOut; // to decider (decider connects to higher layer protocol, i.e. the MAC)
-        input radioIn; // to receive frames (AirFrame) on the radio channel
 }

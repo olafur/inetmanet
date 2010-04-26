@@ -20,6 +20,7 @@
 package inet.linklayer.ieee80211;
 
 import inet.linklayer.ieee80211.mac.Ieee80211gMac;
+import inet.linklayer.ieee80211.mac.Ieee80211egMac;
 import inet.linklayer.ieee80211.mac.Ieee80211Mac;
 import inet.linklayer.ieee80211.mgmt.Ieee80211MgmtAdhoc;
 import inet.linklayer.radio.Ieee80211gRadio;
@@ -42,7 +43,7 @@ module Ieee80211gNicAdhoc
             parameters:
                 @display("p=96,69;q=wlanDataQueue");
         }
-        mac: Ieee80211gMac {
+        mac: Ieee80211egMac {
             parameters:
                 queueModule = "mgmt";
                 @display("p=96,155");
