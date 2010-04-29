@@ -77,9 +77,11 @@ const char *state_to_str(u_int8_t state);
 
 #ifdef DEBUG
 #undef DEBUG
-#define DEBUG_OUTPUT
-#define DEBUG(l, s, args...) alog(l, s, __FUNCTION__, ## args)
-//#define DEBUG(l, i,s, args...) syslog(l, strcpy  s, ## args)
+// Disable the debug output
+//#define DEBUG_OUTPUT
+#define DEBUG(l, s, args...)
+// #define DEBUG(l, s, args...) alog(l, s, __FUNCTION__, ## args)
+// #define DEBUG(l, i,s, args...) syslog(l, strcpy  s, ## args)
 #else
 /*
 #ifdef _WIN32

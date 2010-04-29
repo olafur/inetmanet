@@ -47,7 +47,7 @@
 #endif
 
 /* Comment this to remove packet field output: */
-#define DEBUG_OUTPUT
+//#define DEBUG_OUTPUT
 
 #define HCNT_LIMIT 0
 
