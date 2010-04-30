@@ -362,12 +362,18 @@ dsr_pkt * dsr_pkt_alloc(cPacket  * p)
 		if (dgram->getDontFragment())
 			dp->nh.iph->frag_off |= 0x4000;
 
+		dp->moreFragments=dgram->getMoreFragments();
+		dp->fragmentOffset=dgram->getFragmentOffset();
+
 		dp->nh.iph->ttl= dgram->getTimeToLive(); // TTL
 		dp->nh.iph->protocol= dgram->getTransportProtocol(); // Transport protocol
             // dp->nh.iph->check= p->;                          // Check sum
 		dp->nh.iph->saddr= dgram->getSrcAddress().getInt();
 		dp->nh.iph->daddr= dgram->getDestAddress().getInt();
-		dp->payload = p->decapsulate();
+		if (dgram->getFragmentOffset()==0 && !dgram->getMoreFragments())
+			dp->payload = p->decapsulate();
+		else
+			dp->payload = NULL;
 		dp->encapsulate_protocol = 0;
 
 		if (dp->nh.iph->protocol == IP_PROT_DSR) {
@@ -376,8 +382,7 @@ dsr_pkt * dsr_pkt_alloc(cPacket  * p)
 			if (dynamic_cast<DSRPkt*> (p))
 			{
 				DSRPkt * dsrpkt = dynamic_cast<DSRPkt*> (p);
-				if (dp->payload)
-					dp->encapsulate_protocol=dsrpkt->getEncapProtocol();
+
 				opth =  dsrpkt->getOptions();
 				dsr_opts_len = opth->p_len + DSR_OPT_HDR_LEN;
 				if (!dsr_pkt_alloc_opts(dp, dsr_opts_len))
@@ -385,6 +390,14 @@ dsr_pkt * dsr_pkt_alloc(cPacket  * p)
 					FREE(dp);
 					return NULL;
 				}
+				if (dp->payload)
+					dp->encapsulate_protocol=dsrpkt->getEncapProtocol();
+				else if (dsrpkt->getFragmentOffset()!=0 || dsrpkt->getMoreFragments())
+				{
+					dp->encapsulate_protocol=dsrpkt->getEncapProtocol();
+					dp->payload_len=dsrpkt->getByteLength()-dsrpkt->getHeaderLength()-dsr_opts_len;
+				}
+
 				memcpy(dp->dh.raw, (char *)opth, dsr_opts_len);
 				n = dsr_opt_parse(dp);
 				DEBUG("Packet has %d DSR option(s)\n", n);

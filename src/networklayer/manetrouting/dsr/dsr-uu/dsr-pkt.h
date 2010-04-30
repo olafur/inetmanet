@@ -94,6 +94,8 @@ struct dsr_pkt {
 	struct sk_buff *skb;
 #endif
 #else
+	bool moreFragments;
+	int fragmentOffset;
 	cPacket *payload;
 	DSRPkt   *ip_pkt;
 	int encapsulate_protocol;
