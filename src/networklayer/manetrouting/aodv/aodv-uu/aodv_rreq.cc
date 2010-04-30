@@ -208,15 +208,15 @@ void NS_CLASS rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
 			   unsigned int ifindex)
 {
 
-	AODV_ext *ext;
+	AODV_ext *ext=NULL;
 	RREP *rrep = NULL;
 	int rrep_size = RREP_SIZE;
-	rt_table_t *rev_rt, *fwd_rt = NULL;
+	rt_table_t *rev_rt=NULL, *fwd_rt = NULL;
 	u_int32_t rreq_orig_seqno, rreq_dest_seqno;
 	u_int32_t rreq_id, rreq_new_hcnt, life;
 	unsigned int extlen = 0;
 	struct in_addr rreq_dest, rreq_orig;
-        unsigned int ifaddr;
+	unsigned int ifaddr;
 
 	rreq_dest.s_addr = rreq->dest_addr;
 	rreq_orig.s_addr = rreq->orig_addr;
@@ -230,7 +230,7 @@ void NS_CLASS rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
 	/* Ignore RREQ's that originated from this node. Either we do this
 	   or we buffer our own sent RREQ's as we do with others we
 	   receive. */
-        ifaddr = DEV_IFINDEX(ifindex).ipaddr.s_addr;
+	ifaddr = DEV_IFINDEX(ifindex).ipaddr.s_addr;
 #ifndef OMNETPP
 	if (rreq_orig.s_addr == DEV_IFINDEX(ifindex).ipaddr.s_addr)
 		return;
@@ -242,10 +242,11 @@ void NS_CLASS rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
 	DEBUG(LOG_DEBUG, 0, "ip_src=%s rreq_orig=%s rreq_dest=%s",
 		ip_to_str(ip_src), ip_to_str(rreq_orig), ip_to_str(rreq_dest));
 #ifdef OMNETPP
-        totalRreqRec++;
-        if (!ev.isDisabled())
-    	        ev.printf("ip_src=%s rreq_orig=%s rreq_dest=%s",ip_to_str(ip_src),
-                                 ip_to_str(rreq_orig), ip_to_str(rreq_dest));
+
+	totalRreqRec++;
+	if (!ev.isDisabled())
+		ev.printf("ip_src=%s rreq_orig=%s rreq_dest=%s",ip_to_str(ip_src),
+				ip_to_str(rreq_orig), ip_to_str(rreq_dest));
 #endif
 
 	if (rreqlen < (int) RREQ_SIZE) {
@@ -406,7 +407,8 @@ void NS_CLASS rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
 		fwd_rt = rt_table_find(rreq_dest);
 
 
-		if (fwd_rt && (fwd_rt->state == VALID || fwd_rt->state == IMMORTAL) && !rreq->d) {
+		if (fwd_rt && (fwd_rt->state == VALID || fwd_rt->state == IMMORTAL) && !rreq->d)
+		{
 			struct timeval now;
 			u_int32_t lifetime;
 
@@ -454,7 +456,8 @@ void NS_CLASS rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
 //                (fwd_rt->hcnt>HCNT_LIMIT || (fwd_rt->hcnt==HCNT_LIMIT && uniform(0, 1)>0.8 ))) || fwd_rt->state==IMMORTAL) {
 			if ((fwd_rt->dest_seqno != 0 &&
 				(int32_t) fwd_rt->dest_seqno >= (int32_t) rreq_dest_seqno &&
-                		(fwd_rt->hcnt>HCNT_LIMIT))|| fwd_rt->state==IMMORTAL) {
+                		(fwd_rt->hcnt>HCNT_LIMIT))|| fwd_rt->state==IMMORTAL)
+			{
 //	    if (fwd_rt->dest_seqno != 0 &&
 //		(int32_t) fwd_rt->dest_seqno >= (int32_t) rreq_dest_seqno) {
 
@@ -466,13 +469,28 @@ void NS_CLASS rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
 					   fwd_rt->dest_seqno, rev_rt->dest_addr,
 				   	lifetime);
 				rrep_send(rrep, rev_rt, fwd_rt, rrep_size);
-	    		}
-			else {
+			    /* If the GRATUITOUS flag is set, we must also unicast a
+			       gratuitous RREP to the destination. */
+				if (rreq->g)
+				{
+					rrep = rrep_create(0, 0, rev_rt->hcnt, rev_rt->dest_addr,
+							rev_rt->dest_seqno, fwd_rt->dest_addr,
+							lifetime);
+					rrep_send(rrep, fwd_rt, rev_rt, RREP_SIZE);
+					DEBUG(LOG_INFO, 0, "Sending G-RREP to %s with rte to %s",
+							ip_to_str(rreq_dest), ip_to_str(rreq_orig));
+				}
+				return;
+	    	}
+/*
+			else
+			{
 				goto forward;
-	    		}
-	    /* If the GRATUITOUS flag is set, we must also unicast a
-	       gratuitous RREP to the destination. */
-			if (rreq->g) {
+	    	}
+//	    If the GRATUITOUS flag is set, we must also unicast a
+//		       gratuitous RREP to the destination.
+			if (rreq->g)
+			{
 				rrep = rrep_create(0, 0, rev_rt->hcnt, rev_rt->dest_addr,
 				   rev_rt->dest_seqno, fwd_rt->dest_addr,
 				   lifetime);
@@ -480,40 +498,41 @@ void NS_CLASS rreq_process(RREQ * rreq, int rreqlen, struct in_addr ip_src,
 				rrep_send(rrep, fwd_rt, rev_rt, RREP_SIZE);
 
 				DEBUG(LOG_INFO, 0, "Sending G-RREP to %s with rte to %s",
-		      			ip_to_str(rreq_dest), ip_to_str(rreq_orig));
-	    		}
-	    		return;
-	}
-      		forward:
+			   			ip_to_str(rreq_dest), ip_to_str(rreq_orig));
+		    }
+		    return;
+*/
+		}
+forward:
 #ifndef OMNETPP
-		if (ip_ttl > 1) {
+		if (ip_ttl > 1)
 #else
-		if (ip_ttl > 0) {
+		if (ip_ttl > 0)
 #endif
-	    /* Update the sequence number in case the maintained one is
-	     * larger */
-            		if (fwd_rt && (fwd_rt->state == VALID || fwd_rt->state == IMMORTAL) && !rreq->d&& 0!=HCNT_LIMIT) {
-	       			if (fwd_rt->dest_seqno != 0 &&
-		 			(int32_t) fwd_rt->dest_seqno >= (int32_t) rreq_dest_seqno && fwd_rt->hcnt==HCNT_LIMIT)
-                      				ip_ttl = HCNT_LIMIT;
-            		}
-
-	    		if (fwd_rt && !(fwd_rt->flags & RT_INET_DEST) &&
-				(int32_t) fwd_rt->dest_seqno > (int32_t) rreq_dest_seqno)
+		{
+			/* Update the sequence number in case the maintained one is larger */
+			if (fwd_rt && (fwd_rt->state == VALID || fwd_rt->state == IMMORTAL) && !rreq->d&& 0!=HCNT_LIMIT) {
+				if (fwd_rt->dest_seqno != 0 &&
+						(int32_t) fwd_rt->dest_seqno >= (int32_t) rreq_dest_seqno && fwd_rt->hcnt==HCNT_LIMIT)
+					ip_ttl = HCNT_LIMIT;
+			}
+			if (fwd_rt && !(fwd_rt->flags & RT_INET_DEST) &&
+					(int32_t) fwd_rt->dest_seqno > (int32_t) rreq_dest_seqno)
 				rreq->dest_seqno = htonl(fwd_rt->dest_seqno);
 #ifndef OMNETPP
-	    		rreq_forward(rreq, rreqlen, --ip_ttl);
+			rreq_forward(rreq, rreqlen, --ip_ttl);
 #else
-	    		rreq_forward(rreq, rreqlen, ip_ttl); // the ttl is decremented for ip layer
-#endif
-
-		} else {
-	    		DEBUG(LOG_DEBUG, 0, "RREQ not forwarded - ttl=0");
-#ifdef OMNETPP
-    	    		EV << "RREQ not forwarded - ttl=0";
+			rreq_forward(rreq, rreqlen, ip_ttl); // the ttl is decremented for ip layer
 #endif
 		}
-    	}
+		else
+		{
+	    		DEBUG(LOG_DEBUG, 0, "RREQ not forwarded - ttl=0");
+#ifdef OMNETPP
+    	   		EV << "RREQ not forwarded - ttl=0";
+#endif
+		}
+	}
 }
 
 /* Perform route discovery for a unicast destination */
