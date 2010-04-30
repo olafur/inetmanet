@@ -50,7 +50,7 @@ struct iphdr *DSRUU::dsr_build_ip(struct dsr_pkt *dp, struct in_addr src,
 
 	dp->nh.iph = iph = (struct iphdr *)dp->ip_data;
 
-	if (dp->payload || (dp->moreFragments || dp->fragmentOffset!=0))
+	if (dp->payload)
 	{
 		iph->ttl = (ttl ? ttl : IPDEFTTL);
 		iph->saddr = src.s_addr;
@@ -192,30 +192,19 @@ void DSRUU::omnet_deliver(struct dsr_pkt *dp)
 	dgram->setControlInfo(new MacControlInfo(macAddr));
 #else
 	IPDatagram *dgram;
-	if (dp->moreFragments || dp->fragmentOffset!=0)
-	{
-		if (dp->ip_pkt)
-		{
-			dgram = dp->ip_pkt;
-			dp->ip_pkt=NULL;
-		}
-	}
-	else
-	{
-		dgram = new IPDatagram;
-		IPAddress destAddress_var((uint32_t)dp->dst.s_addr);
-		dgram->setDestAddress(destAddress_var);
-		IPAddress srcAddress_var((uint32_t)dp->src.s_addr);
-		dgram->setSrcAddress(srcAddress_var);
-		dgram->setHeaderLength(dp->nh.iph->ihl); // Header length
-		dgram->setVersion(dp->nh.iph->version); // Ip version
-		dgram->setDiffServCodePoint(dp->nh.iph->tos); // ToS
-		dgram->setIdentification(dp->nh.iph->id); // Identification
-		dgram->setMoreFragments(dp->nh.iph->tos & 0x2000);
-		dgram->setDontFragment (dp->nh.iph->frag_off & 0x4000);
-		dgram->setTimeToLive (dp->nh.iph->ttl); // TTL
-		dgram->setTransportProtocol(dp->encapsulate_protocol); // Transport protocol
-	}
+	dgram = new IPDatagram;
+	IPAddress destAddress_var((uint32_t)dp->dst.s_addr);
+	dgram->setDestAddress(destAddress_var);
+	IPAddress srcAddress_var((uint32_t)dp->src.s_addr);
+	dgram->setSrcAddress(srcAddress_var);
+	dgram->setHeaderLength(dp->nh.iph->ihl); // Header length
+	dgram->setVersion(dp->nh.iph->version); // Ip version
+	dgram->setDiffServCodePoint(dp->nh.iph->tos); // ToS
+	dgram->setIdentification(dp->nh.iph->id); // Identification
+	dgram->setMoreFragments(dp->nh.iph->tos & 0x2000);
+	dgram->setDontFragment (dp->nh.iph->frag_off & 0x4000);
+	dgram->setTimeToLive (dp->nh.iph->ttl); // TTL
+	dgram->setTransportProtocol(dp->encapsulate_protocol); // Transport protocol
 #endif
 	if (dp->payload)
 		dgram->encapsulate(dp->payload);

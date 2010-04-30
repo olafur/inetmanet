@@ -133,6 +133,7 @@ DSRPkt::DSRPkt(struct dsr_pkt *dp,int interface_id) : IPDatagram()
 
 
 	setEncapProtocol((IPProtocolId)0);
+
 	if (dp) {
 #ifdef MobilityFramework
 		setDestAddr(dp->dst.s_addr);
@@ -152,6 +153,7 @@ DSRPkt::DSRPkt(struct dsr_pkt *dp,int interface_id) : IPDatagram()
 		setDontFragment (dp->nh.iph->frag_off & 0x4000);
 		setTimeToLive (dp->nh.iph->ttl); // TTL
 		setTransportProtocol(IP_PROT_DSR); // Transport protocol
+		setBitLength(getHeaderLength()*8);
 #endif
 		// ¿como gestionar el MAC
 		// dp->mac.raw = p->access(hdr_mac::offset_);
@@ -163,7 +165,7 @@ DSRPkt::DSRPkt(struct dsr_pkt *dp,int interface_id) : IPDatagram()
 		options = (dsr_opt_hdr *)malloc (dsr_opts_len);
 
 		memcpy((char*)options,(char*)opth,dsr_pkt_opts_len(dp));
-        	setBitLength (getBitLength()+((DSR_OPT_HDR_LEN+options->p_len)*8));
+		setBitLength (getBitLength()+((DSR_OPT_HDR_LEN+options->p_len)*8));
 		if (dp->payload)
 		{
 			encapsulate(dp->payload);
