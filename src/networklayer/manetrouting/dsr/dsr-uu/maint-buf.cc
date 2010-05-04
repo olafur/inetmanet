@@ -186,13 +186,16 @@ static struct maint_entry *maint_entry_create(struct dsr_pkt *dp,
 #else
 	m->dp = NULL;
 
-	if (dp->payload)
+	if (dp->payload || (!dp->moreFragments || dp->fragmentOffset!=0))
 	{
 		IPDatagram *dgram;
 		DSRPkt *dsrPkt;
 		if (dp->nh.iph->protocol == IP_PROT_DSR)
 		{
-			dsrPkt = new DSRPkt();
+			if (dp->moreFragments || dp->fragmentOffset!=0)
+				dsrPkt = dp->ip_pkt->dup();
+			else
+				dsrPkt = new DSRPkt();
 			dgram = dsrPkt;
 		}
 		else
@@ -231,8 +234,8 @@ static struct maint_entry *maint_entry_create(struct dsr_pkt *dp,
 		}
 		else
 			dgram->setTransportProtocol(dp->encapsulate_protocol); // Transport protocol
-
-		dgram->encapsulate(dp->payload->dup());
+		if (!dp->moreFragments && dp->fragmentOffset==0)
+			dgram->encapsulate(dp->payload->dup());
 		m->dp = dsr_pkt_alloc(dgram);
 		if (dp->srt)
 		{

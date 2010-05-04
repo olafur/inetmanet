@@ -41,6 +41,7 @@ simple Ieee80211aRadio extends PropagationModel
         double bitrate @unit("bps"); // (in bits/s)
         double thermalNoise @unit("dBm") = default(-110dBm); // base noise level (dBm)
         double pathLossAlpha = default(2); // used by the path loss calculation
+        double shadowingDeviation @unit("dB") = default(0dB); // used by the shadowing model calculation
         double snirThreshold @unit("dB") = default(4dB); // if signal-noise ratio is below this threshold, frame is considered noise (in dB)
         double sensitivity @unit("dBm"); // received signals with power below sensitivity are ignored
         string berTableFile=default("");
@@ -63,10 +64,6 @@ simple Ieee80211aRadio extends PropagationModel
         double usage_radio_sleep @unit(mA) = default (-1mA); // disable battery registration 
         double usage_radio_send @unit(mA) = default (-1mA); // disable battery registration 
         
-    gates:
-        input uppergateIn;   // from higher layer protocol (MAC)
-        output uppergateOut; // to decider (decider connects to higher layer protocol, i.e. the MAC)
-        input radioIn; // to receive frames (AirFrame) on the radio channel
 }
 
 

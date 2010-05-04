@@ -285,10 +285,10 @@ void NS_CLASS rrep_process(RREP * rrep, int rreplen, struct in_addr ip_src,
 
     /* Convert to correct byte order on affeected fields: */
 	rrep_dest.s_addr = rrep->dest_addr;
-    	rrep_orig.s_addr = rrep->orig_addr;
-    	rrep_seqno = ntohl(rrep->dest_seqno);
-    	rrep_lifetime = ntohl(rrep->lifetime);
-    /* Increment RREP hop count to account for intermediate node... */
+	rrep_orig.s_addr = rrep->orig_addr;
+	rrep_seqno = ntohl(rrep->dest_seqno);
+	rrep_lifetime = ntohl(rrep->lifetime);
+	/* Increment RREP hop count to account for intermediate node... */
 	rrep_new_hcnt = rrep->hcnt + 1;
 
 	if (rreplen < (int) RREP_SIZE) {
@@ -306,18 +306,19 @@ void NS_CLASS rrep_process(RREP * rrep, int rreplen, struct in_addr ip_src,
 	if (rrep_dest.s_addr == DEV_IFINDEX(ifindex).ipaddr.s_addr)
 		return;
 
-        if (rrep_orig.s_addr == DEV_IFINDEX(ifindex).ipaddr.s_addr)
-                DEBUG(LOG_DEBUG, 0, "rrep for us")
+	if (rrep_orig.s_addr == DEV_IFINDEX(ifindex).ipaddr.s_addr)
+		DEBUG(LOG_DEBUG, 0, "rrep for us");
 #else
+
+
 	if (isLocalAddress (rrep_dest.s_addr))
 		return;
-
-        if (isLocalAddress(rrep_orig.s_addr))
-                DEBUG(LOG_DEBUG, 0, "rrep for us");
+	if (isLocalAddress(rrep_orig.s_addr))
+		DEBUG(LOG_DEBUG, 0, "rrep for us");
 #endif
 
 	DEBUG(LOG_DEBUG, 0, "from %s about %s->%s",
-	  ip_to_str(ip_src), ip_to_str(rrep_orig), ip_to_str(rrep_dest));
+			ip_to_str(ip_src), ip_to_str(rrep_orig), ip_to_str(rrep_dest));
 #ifdef DEBUG_OUTPUT
 	log_pkt_fields((AODV_msg *) rrep);
 #endif
@@ -328,7 +329,7 @@ void NS_CLASS rrep_process(RREP * rrep, int rreplen, struct in_addr ip_src,
 	ext = (AODV_ext *) ((char *) rrep + RREP_SIZE);
 	while ((rreplen - extlen) > RREP_SIZE) {
 #else
-        totalRrepRec++;
+	totalRrepRec++;
 	ext = rrep->getFirstExtension();
 	for (int i=0; i<rrep->getNumExtension ();i++) {
 #endif
@@ -390,15 +391,14 @@ void NS_CLASS rrep_process(RREP * rrep, int rreplen, struct in_addr ip_src,
 		return;
 	}
 
-
     /* If the RREP_ACK flag is set we must send a RREP
        acknowledgement to the destination that replied... */
 	if (rrep->a) {
 		RREP_ack *rrep_ack;
 
 		rrep_ack = rrep_ack_create();
-        	totalRrepAckSend++;
-        rrep_ack->ttl=MAXTTL;
+		totalRrepAckSend++;
+		rrep_ack->ttl=MAXTTL;
 		aodv_socket_send((AODV_msg *) rrep_ack, fwd_rt->next_hop,
 			 NEXT_HOP_WAIT, 1, &DEV_IFINDEX(fwd_rt->ifindex));
 	/* Remove RREP_ACK flag... */
@@ -451,14 +451,18 @@ void NS_CLASS rrep_process(RREP * rrep, int rreplen, struct in_addr ip_src,
 
 #ifdef OMNETPP
 				if (fwd_rt->nprec)
+				{
 #endif
-				rerr = rerr_create(rerr_flags, fwd_rt->dest_addr,
-					   fwd_rt->dest_seqno);
-				rerr->ttl=1;
-				if (fwd_rt->nprec)
-				    aodv_socket_send((AODV_msg *) rerr, dest,
-					     RERR_CALC_SIZE(rerr), 1,
-					     &DEV_IFINDEX(fwd_rt->ifindex));
+					rerr = rerr_create(rerr_flags, fwd_rt->dest_addr,
+							fwd_rt->dest_seqno);
+					rerr->ttl=1;
+					if (fwd_rt->nprec)
+						aodv_socket_send((AODV_msg *) rerr, dest,
+								RERR_CALC_SIZE(rerr), 1,
+								&DEV_IFINDEX(fwd_rt->ifindex));
+#ifdef OMNETPP
+				}
+#endif
 			}
 		}
 	} else {

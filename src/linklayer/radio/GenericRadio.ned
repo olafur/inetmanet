@@ -47,9 +47,5 @@ simple GenericRadio extends PropagationModel
         double usage_radio_recv @unit(mA) = default (-1mA); // disable battery registration
         double usage_radio_sleep @unit(mA) = default (-1mA); // disable battery registration 
         double usage_radio_send @unit(mA) = default (-1mA); // disable battery registration 
-    gates:
-        input uppergateIn @labels(PhyControlInfo/down); // from higher layer protocol (MAC)
-        output uppergateOut @labels(PhyControlInfo/up); // to decider (decider connects to higher layer protocol, i.e. the MAC)
-        input radioIn @labels(AirFrame); // to receive frames (AirFrame) on the radio channel
 }
 

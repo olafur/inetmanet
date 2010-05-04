@@ -7,7 +7,7 @@
 // *
 // * author:      Alfonso Ariza
 // *
-// * copyright:	  (c) 2009 Universidad de Málaga
+// * copyright:	  (c) 2009 Universidad de Mï¿½laga
 // *
 // *              This program is free software; you can redistribute it 
 // *              and/or modify it under the terms of the GNU General Public 
@@ -20,7 +20,7 @@
 // ***************************************************************************
 
 package inet.linklayer.radio;
-simple PropagationModel
+simple PropagationModel like Radio
 {
     parameters:
 	  double TransmissionAntennaGainIndB @unit("dB") = default(0dB);  // Transmission Antenna Gain 
@@ -31,5 +31,8 @@ simple PropagationModel
       double KdB = default(8); // RiceModel
       double  TransmiterAntennaHigh @unit("m") = default(1m);   // Transmitter Antenna High 
       double  ReceiverAntennaHigh   @unit("m") = default(1m);	// Receiver Antenna High
-  
+   gates:
+        input uppergateIn @labels(PhyControlInfo/down); // from higher layer protocol (MAC)
+        output uppergateOut @labels(PhyControlInfo/up); // to higher layer protocol (MAC)
+        input radioIn @labels(AirFrame); // to receive frames (AirFrame) on the radio channel
 }
