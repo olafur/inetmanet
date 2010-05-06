@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //
-
+//#define NEWFRAGMENT
 
 #include <omnetpp.h>
 #include <stdlib.h>
@@ -491,7 +491,7 @@ void IP::routeMulticastPacket(IPDatagram *datagram, InterfaceEntry *destIE, Inte
         delete datagram;
     }
 }
-
+#ifndef NEWFRAGMENT
 void IP::reassembleAndDeliver(IPDatagram *datagram)
 {
 
@@ -554,7 +554,7 @@ void IP::reassembleAndDeliver(IPDatagram *datagram)
     	}
     }
 }
-
+#endif
 cPacket *IP::decapsulateIP(IPDatagram *datagram)
 {
     // decapsulate transport packet
@@ -579,7 +579,7 @@ cPacket *IP::decapsulateIP(IPDatagram *datagram)
     return packet;
 }
 
-
+#ifndef NEWFRAGMENT
 void IP::fragmentAndSend(IPDatagram *datagram, InterfaceEntry *ie, IPAddress nextHopAddr)
 {
     int mtu = ie->getMTU();
@@ -640,7 +640,7 @@ void IP::fragmentAndSend(IPDatagram *datagram, InterfaceEntry *ie, IPAddress nex
 
     delete datagram;
 }
-
+#endif
 
 IPDatagram *IP::encapsulate(cPacket *transportPacket, InterfaceEntry *&destIE)
 {
@@ -797,4 +797,148 @@ void IP::dsrFillDestIE(IPDatagram *datagram, InterfaceEntry *&destIE,IPAddress &
 
 
 
+#ifdef NEWFRAGMENT
+void IP::fragmentAndSend(IPDatagram *datagram, InterfaceEntry *ie, IPAddress nextHopAddr)
+{
+    int mtu = ie->getMTU();
 
+    // check if datagram does not require fragmentation
+    if (datagram->getByteLength() <= mtu)
+    {
+        sendDatagramToOutput(datagram, ie, nextHopAddr);
+        return;
+    }
+
+    cPacket * payload = datagram->decapsulate();
+    int headerLength = datagram->getByteLength();
+    int payloadLength = payload->getByteLength();
+
+
+    int noOfFragments =
+        int(ceil((float(payloadLength)/mtu) /
+        (1-float(headerLength)/mtu) ) ); // FIXME ???
+
+    // if "don't fragment" bit is set, throw datagram away and send ICMP error message
+    if (datagram->getDontFragment() && noOfFragments>1)
+    {
+        EV << "datagram larger than MTU and don't fragment bit set, sending ICMP_DESTINATION_UNREACHABLE\n";
+        datagram->encapsulate(payload);
+        icmpAccess.get()->sendErrorMessage(datagram, ICMP_DESTINATION_UNREACHABLE,
+                                                     ICMP_FRAGMENTATION_ERROR_CODE);
+        return;
+    }
+
+    datagram->setTotalPayloadLength(payloadLength);
+
+    // create and send fragments
+    EV << "Breaking datagram into " << noOfFragments << " fragments\n";
+    std::string fragMsgName = datagram->getName();
+    fragMsgName += "-frag";
+
+    // FIXME revise this!
+    for (int i=0; i<noOfFragments; i++)
+    {
+        // FIXME is it ok that full encapsulated packet travels in every datagram fragment?
+        // should better travel in the last fragment only. Cf. with reassembly code!
+        IPDatagram *fragment = (IPDatagram *) datagram->dup();
+        cPacket *payloadFrag = payload->dup();
+        fragment->setName(fragMsgName.c_str());
+
+        // total_length equal to mtu, except for last fragment;
+        // "more fragments" bit is unchanged in the last fragment, otherwise true
+        if (i != noOfFragments-1)
+        {
+            fragment->setMoreFragments(true);
+            payloadFrag->setByteLength(mtu-headerLength);
+            payloadLength = payloadLength -(mtu-headerLength);
+        }
+        else
+        {
+            payloadFrag->setByteLength(payloadLength);
+        }
+        fragment->encapsulate(payloadFrag);
+        fragment->setFragmentOffset( i*(mtu - headerLength) );
+
+        sendDatagramToOutput(fragment, ie, nextHopAddr);
+    }
+
+    delete datagram;
+}
+
+
+void IP::reassembleAndDeliver(IPDatagram *datagram)
+{
+
+    // reassemble the packet (if fragmented)
+
+
+	int headerLength;
+    if (datagram->getFragmentOffset()!=0 || datagram->getMoreFragments())
+    {
+        EV << "Datagram fragment: offset=" << datagram->getFragmentOffset()
+           << ", MORE=" << (datagram->getMoreFragments() ? "true" : "false") << ".\n";
+
+        // erase timed out fragments in fragmentation buffer; check every 10 seconds max
+        if (simTime() >= lastCheckTime + 10)
+        {
+            lastCheckTime = simTime();
+            fragbuf.purgeStaleFragments(simTime()-fragmentTimeoutTime);
+        }
+        if (!datagram->getMoreFragments())
+        {
+        	int totalLength = datagram->getByteLength();
+        	headerLength = datagram->getHeaderLength();
+        	cPacket * payload=datagram->decapsulate();
+        	datagram->setHeaderLength(datagram->getByteLength());
+        	payload->setByteLength(datagram->getTotalPayloadLength());
+        	datagram->encapsulate(payload);
+        	datagram->setByteLength(totalLength);
+        }
+
+        datagram = fragbuf.addFragment(datagram, simTime());
+        if (!datagram)
+        {
+            EV << "No complete datagram yet.\n";
+            return;
+        }
+        datagram->setHeaderLength(headerLength);
+        EV << "This fragment completes the datagram.\n";
+    }
+
+	int protocol = datagram->getTransportProtocol();
+    cPacket *packet=NULL;
+    if (protocol!=IP_PROT_DSR)
+    {
+    	packet = decapsulateIP(datagram);
+    }
+
+    if (protocol==IP_PROT_ICMP)
+    {
+        // incoming ICMP packets are handled specially
+        handleReceivedICMP(check_and_cast<ICMPMessage *>(packet));
+    }
+    else if (protocol==IP_PROT_DSR)
+    {
+    	// If the protocol is Dsr Send directely the datagram to manet routing
+        controlMessageToManetRouting(MANET_ROUTE_NOROUTE,datagram);
+    }
+    else if (protocol==IP_PROT_IP)
+    {
+        // tunnelled IP packets are handled separately
+        send(packet, "preRoutingOut");
+    }
+    else
+    {
+    	// JcM Fix: check if the transportOut port are connected, otherwise
+    	// discard the packet
+    	int gateindex = mapping.getOutputGateForProtocol(protocol);
+
+    	if (gate("transportOut",gateindex)->isPathOK()) {
+    		send(packet, "transportOut", gateindex);
+		} else {
+			EV << "L3 Protocol not connected. discarding packet" << endl;
+			delete(packet);
+    	}
+    }
+}
+#endif
