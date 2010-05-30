@@ -246,7 +246,7 @@ cPacket *UDPBasicBurst2::createPacket()
 {
     char msgName[32];
     sprintf(msgName,"UDPBasicAppData-%d", counter++);
-    msgByteLength = par("messageLength").longValue() / 8;
+    msgByteLength = par("messageLength").longValue();
     cPacket *payload = new cPacket(msgName);
     payload->setByteLength(msgByteLength);
     payload->addPar("sourceId") = getId();

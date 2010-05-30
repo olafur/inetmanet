@@ -144,6 +144,9 @@ packet IPDatagram
     IPRecordRouteOption recordRoute;
     IPTimestampOption timestampOption;
     IPSourceRoutingOption sourceRoutingOption; // optionCode determines if strict or loose source routing
+    
+    // Virtual value, used by the new fragment mechanism
+    unsigned int totalPayloadLength;
 }
 
 
