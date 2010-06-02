@@ -181,7 +181,7 @@ int NSCLASS dsr_ack_req_send(struct dsr_pkt *dp)
 			struct dsr_opt_hdr * options;
 			opth = dp->dh.opth;
 			int dsr_opts_len = opth->p_len + DSR_OPT_HDR_LEN;
-			options = (dsr_opt_hdr *)malloc (dsr_opts_len);
+			options = (dsr_opt_hdr *)MALLOC (dsr_opts_len, GFP_ATOMIC);
 			memcpy((char*)options,(char*)opth,dsr_pkt_opts_len(dp));
 			p->setOptions(options);
 			p->setBitLength (p->getBitLength()+((DSR_OPT_HDR_LEN+options->p_len)*8));
@@ -288,6 +288,7 @@ struct dsr_ack_req_opt *NSCLASS
 dsr_ack_req_opt_add(struct dsr_pkt *dp, unsigned short id)
 {
 	char *buf = NULL;
+	struct dsr_opt *dopt;
 	int prot = 0, tot_len = 0, ttl = IPDEFTTL;
 
 	if (!dp)
@@ -295,9 +296,14 @@ dsr_ack_req_opt_add(struct dsr_pkt *dp, unsigned short id)
 
 	/* If we are forwarding a packet and there is already an ACK REQ option,
 	 * we just overwrite the old one. */
-	if (dp->ack_req_opt) {
-		buf = (char *)dp->ack_req_opt;
-		goto end;
+	dopt = DSR_GET_OPT(dp->dh.opth);
+	while ((char*)dopt<dp->dh.tail)
+	{
+		if (dopt->type==DSR_OPT_ACK_REQ) {
+			buf = (char *)dopt;
+			goto end;
+		}
+		dopt = DSR_GET_NEXT_OPT(dopt);
 	}
 #ifdef NS2
 	if (dp->p) {
@@ -355,7 +361,10 @@ dsr_ack_req_opt_add(struct dsr_pkt *dp, unsigned short id)
 				    DSR_ACK_REQ_HDR_LEN, dp->dh.opth->nh);
 	}
 	DEBUG("Added ACK REQ option id=%u\n", id, ntohs(dp->dh.opth->p_len));
-      end:
+end:
+	if (buf+DSR_ACK_REQ_HDR_LEN>dp->dh.tail)
+		EV << "DSR memory lack \n";
+
 	return dsr_ack_req_opt_create(buf, DSR_ACK_REQ_HDR_LEN, id);
 }
 
@@ -419,6 +428,9 @@ int NSCLASS dsr_ack_req_opt_recv(struct dsr_pkt *dp, struct dsr_ack_req_opt *ack
 
 	if (!ack_req_opt || !dp || dp->flags & PKT_PROMISC_RECV)
 		return DSR_PKT_ERROR;
+
+	if ((char*)ack_req_opt+DSR_ACK_REQ_HDR_LEN>dp->dh.tail)
+		EV << "DSR memory lack \n";
 
 	dp->ack_req_opt = ack_req_opt;
 

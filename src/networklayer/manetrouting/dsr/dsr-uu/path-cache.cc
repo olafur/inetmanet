@@ -165,6 +165,7 @@ static int __ph_route_tbl_add(struct path_table *rt_t,
 		__tbl_add_tail(aux,&n->l);
 	}
 
+	gettime(&now);
 	if (!tbl_empty(&n->paths))
 	{
 		list_for_each(pos, &n->paths.head)
@@ -211,10 +212,10 @@ static int __ph_route_tbl_add(struct path_table *rt_t,
 			{
 				__tbl_detach(&n->paths,&rt_aux2->l);
 				if (rt_aux2->route)
-					free(rt_aux2->route);
+					FREE(rt_aux2->route);
 				if (rt_aux2->size_cost>0)
-					free(rt_aux2->vector_cost);
-				free (rt_aux2);
+					FREE(rt_aux2->vector_cost);
+				FREE (rt_aux2);
 			}
 
 		}
@@ -235,7 +236,7 @@ static int __ph_route_tbl_add(struct path_table *rt_t,
 		if (rt->size_cost !=vector_size)
 		{
 			if (rt->size_cost>0)
-				free (rt->vector_cost);
+				FREE (rt->vector_cost);
 			rt->vector_cost = (unsigned int*)MALLOC(vector_size*sizeof(unsigned int),GFP_ATOMIC);
 			rt->size_cost=vector_size;
 		}
@@ -287,10 +288,10 @@ struct dsr_srt *NSCLASS ph_srt_find(struct in_addr src,struct in_addr dst,int cr
 		{
 			__tbl_detach(&dst_node->paths,&rt->l);
 			if (rt->route)
-				free(rt->route);
+				FREE(rt->route);
 			if (rt->size_cost>0)
-				free(rt->vector_cost);
-			free (rt);
+				FREE(rt->vector_cost);
+			FREE (rt);
 			continue;
 		}
 
@@ -614,7 +615,7 @@ ph_srt_add(struct dsr_srt *srt, usecs_t timeout, unsigned short flags)
 #endif
 			addr2 = dsr_aux->dst;
 			__ph_route_tbl_add(&PCH,addr2,n+1-j,dsr_aux->addrs, timeout, 0, cost,cost_vector,size_cost);
-			free (dsr_aux);
+			FREE (dsr_aux);
 		}
 	}
 }
@@ -637,7 +638,7 @@ ph_srt_add_node(struct in_addr node, usecs_t timeout, unsigned short flags,unsig
 	{
 		size_cost=sizeof(unsigned int);
 	}
-	srt = (struct dsr_srt *) malloc((sizeof(struct dsr_srt) + size_cost));
+	srt = (struct dsr_srt *) MALLOC((sizeof(struct dsr_srt) + size_cost), GFP_ATOMIC);
 
 	char *aux = (char *) srt;
 	aux += sizeof(struct dsr_srt);
@@ -664,7 +665,7 @@ ph_srt_add_node(struct in_addr node, usecs_t timeout, unsigned short flags,unsig
 	srt->src=my_addr();
 
 	ph_srt_add(srt,timeout,flags);
-	free (srt);
+	FREE (srt);
 
 }
 
@@ -697,10 +698,10 @@ void NSCLASS ph_srt_delete_node(struct in_addr src)
 					rt = (struct path*) pos2;
 					__tbl_detach(&n_cache->paths,&rt->l);
 					if (rt->route)
-						free(rt->route);
+						FREE(rt->route);
 					if (rt->size_cost>0)
-						free(rt->vector_cost);
-					free (rt);
+						FREE(rt->vector_cost);
+					FREE (rt);
 				}
 				continue;
 			}
@@ -711,10 +712,10 @@ void NSCLASS ph_srt_delete_node(struct in_addr src)
 				{
 					__tbl_detach(&n_cache->paths,&rt->l);
 					if (rt->route)
-						free(rt->route);
+						FREE(rt->route);
 					if (rt->size_cost>0)
-						free(rt->vector_cost);
-					free (rt);
+						FREE(rt->vector_cost);
+					FREE (rt);
 					continue;
 				}
 				int long_route=rt->num_hop-1;
@@ -724,10 +725,10 @@ void NSCLASS ph_srt_delete_node(struct in_addr src)
 					{
 						__tbl_detach(&n_cache->paths,&rt->l);
 						if (rt->route)
-							free(rt->route);
+							FREE(rt->route);
 						if (rt->size_cost>0)
-							free(rt->vector_cost);
-						free (rt);
+							FREE(rt->vector_cost);
+						FREE (rt);
 						break;
 					}
 				}
@@ -765,10 +766,10 @@ void NSCLASS ph_srt_delete_link(struct in_addr src,struct in_addr dst)
 				{
 					__tbl_detach(&n_cache->paths,&rt->l);
 					if (rt->route)
-						free(rt->route);
+						FREE(rt->route);
 					if (rt->size_cost>0)
-						free(rt->vector_cost);
-					free (rt);
+						FREE(rt->vector_cost);
+					FREE (rt);
 					continue;
 				}
 				if (rt->num_hop==1 )
@@ -776,22 +777,22 @@ void NSCLASS ph_srt_delete_link(struct in_addr src,struct in_addr dst)
 					if (n_cache->addr.s_addr==dst.s_addr)
 					{
 						if (rt->route)
-							free(rt->route);
+							FREE(rt->route);
 						if (rt->size_cost>0)
-							free(rt->vector_cost);
+							FREE(rt->vector_cost);
 						__tbl_detach(&n_cache->paths,&rt->l);
-						free (rt);
+						FREE (rt);
 					}
 					continue;
 				}
 				if (src.s_addr==my_addr().s_addr && rt->route[0].s_addr== dst.s_addr)
 				{
 					if (rt->route)
-						free(rt->route);
+						FREE(rt->route);
 					if (rt->size_cost>0)
-						free(rt->vector_cost);
+						FREE(rt->vector_cost);
 					__tbl_detach(&n_cache->paths,&rt->l);
-					free (rt);
+					FREE (rt);
 					continue;
 				}
 				int long_route=rt->num_hop-2;
@@ -802,10 +803,10 @@ void NSCLASS ph_srt_delete_link(struct in_addr src,struct in_addr dst)
 					{
 						__tbl_detach(&n_cache->paths,&rt->l);
 						if (rt->route)
-							free(rt->route);
+							FREE(rt->route);
 						if (rt->size_cost>0)
-							free(rt->vector_cost);
-						free (rt);
+							FREE(rt->vector_cost);
+						FREE (rt);
 						nextIt=0;
 						break;
 					}
@@ -815,10 +816,10 @@ void NSCLASS ph_srt_delete_link(struct in_addr src,struct in_addr dst)
 				{
 					__tbl_detach(&n_cache->paths,&rt->l);
 					if (rt->route)
-						free(rt->route);
+						FREE(rt->route);
 					if (rt->size_cost>0)
-						free(rt->vector_cost);
-					free (rt);
+						FREE(rt->vector_cost);
+					FREE (rt);
 				}
 			}
 		}
@@ -865,10 +866,10 @@ void NSCLASS path_cache_cleanup(void)
 					rt = (struct path *) pos2;
 					__tbl_detach(&n_cache->paths,&rt->l);
 					if (rt->route)
-						free(rt->route);
+						FREE(rt->route);
 					if (rt->size_cost>0)
-						free(rt->vector_cost);
-					free (rt);
+						FREE(rt->vector_cost);
+					FREE (rt);
 			}
 			__tbl_detach(&PCH.hash[i],&n_cache->l);
 			FREE(n_cache);

@@ -157,8 +157,8 @@ static inline char *print_pkt(char *p, int len)
 #define timer_pending(timer) ((timer)->pending())
 
 #define del_timer_sync(timer) del_timer(timer)
-#define MALLOC(s, p) malloc(s)
-#define FREE(p) free(p)
+//#define MALLOC(s, p) malloc(s)
+//#define FREE(p) free(p)
 #define XMIT(pkt) omnet_xmit(pkt)
 #define DELIVER(pkt) omnet_deliver(pkt)
 #define __init

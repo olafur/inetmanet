@@ -109,7 +109,7 @@ static inline int crit_delete_tbl_enty(void *pos, void *data)
 		list_del(p);
 		struct id_entry_route *id_e = (struct id_entry_route *)p;
 		if (id_e->add!=NULL)
-			free (id_e->add);
+			FREE (id_e->add);
 		e->rreq_id_tbl_routes.len--;
 		FREE(p);
 	}
@@ -270,7 +270,10 @@ void NSCLASS rreq_tbl_timeout(unsigned long data)
 		e->state = STATE_IDLE;
 
 /* 		DSR_WRITE_UNLOCK(&rreq_tbl); */
-		tbl_add_tail(&rreq_tbl, &e->l);
+		//if (e->timer)
+		delete e->timer;
+		FREE(e);
+		//tbl_add_tail(&rreq_tbl, &e->l);
 		return;
 	}
 
@@ -312,11 +315,13 @@ struct rreq_tbl_entry *NSCLASS __rreq_tbl_entry_create(struct in_addr node_addr)
 	if (!e)
 		return NULL;
 
+	memset(e, 0, sizeof(struct rreq_tbl_entry));
 	e->state = STATE_IDLE;
 	e->node_addr = node_addr;
 	e->ttl = 0;
-	memset(&e->tx_time, 0, sizeof(struct timeval));;
+	memset(&e->tx_time, 0, sizeof(struct timeval));
 	e->num_rexmts = 0;
+	e->timer=NULL;
 #ifndef OMNETPP
 #ifdef NS2
 	e->timer = new DSRUUTimer(this, "RREQTblTimer");
@@ -497,8 +502,10 @@ int NSCLASS rreq_tbl_route_discovery_cancel(struct in_addr dst)
 
 	e->state = STATE_IDLE;
 	gettime(&e->last_used);
-
-	tbl_add_tail(&rreq_tbl, &e->l);
+	//if (e->timer)
+	delete e->timer;
+	FREE(e);
+	//tbl_add_tail(&rreq_tbl, &e->l);
 
 	return 1;
 }

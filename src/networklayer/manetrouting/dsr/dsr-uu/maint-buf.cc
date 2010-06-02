@@ -226,7 +226,7 @@ static struct maint_entry *maint_entry_create(struct dsr_pkt *dp,
 			opth = dp->dh.opth;
 
 			int dsr_opts_len = opth->p_len + DSR_OPT_HDR_LEN;
-			options = (dsr_opt_hdr *)malloc (dsr_opts_len);
+			options = (dsr_opt_hdr *)MALLOC (dsr_opts_len, GFP_ATOMIC);
 			memcpy((char*)options,(char*)opth,dsr_pkt_opts_len(dp));
 			dsrPkt->setOptions(options);
 			dsrPkt->setBitLength (dsrPkt->getBitLength()+((DSR_OPT_HDR_LEN+options->p_len)*8));

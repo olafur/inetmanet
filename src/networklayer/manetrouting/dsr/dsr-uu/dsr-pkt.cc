@@ -33,11 +33,7 @@ char *dsr_pkt_alloc_opts(struct dsr_pkt *dp, int len)
 {
 	if (!dp)
 		return NULL;
-#ifndef OMNETPP
 	dp->dh.raw = (char *)MALLOC(len + DEFAULT_TAILROOM, GFP_ATOMIC);
-#else
-	dp->dh.raw = (char *)malloc(len + DEFAULT_TAILROOM);
-#endif
 	if (!dp->dh.raw)
 		return NULL;
 

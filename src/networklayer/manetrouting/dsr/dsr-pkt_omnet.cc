@@ -64,7 +64,7 @@ struct dsr_srt_opt {
 DSRPkt::~DSRPkt() 
 {
 	if (this->options)
-		free (this->options);
+		delete [] this->options;
 	if (costVectorSize>0)
 		delete [] costVector;
 }
@@ -101,12 +101,12 @@ DSRPkt& DSRPkt::operator=(const DSRPkt& m)
 
 	if (options)
 	{
-		free (options);
+		delete [] options;
 		options=NULL;
 	}
 
 
-	options = (struct dsr_opt_hdr *)malloc(dsr_opts_len);
+	options = (struct dsr_opt_hdr *) new char[dsr_opts_len];
 
 	memcpy ((char*)options,(char*)m.options, dsr_opts_len);
 
@@ -162,7 +162,7 @@ DSRPkt::DSRPkt(struct dsr_pkt *dp,int interface_id) : IPDatagram()
 		opth = dp->dh.opth;
 		int dsr_opts_len = opth->p_len + DSR_OPT_HDR_LEN;
 
-		options = (dsr_opt_hdr *)malloc (dsr_opts_len);
+		options = (dsr_opt_hdr *)new char[dsr_opts_len];
 
 		memcpy((char*)options,(char*)opth,dsr_pkt_opts_len(dp));
 		setBitLength (getBitLength()+((DSR_OPT_HDR_LEN+options->p_len)*8));
@@ -227,9 +227,9 @@ void DSRPkt::ModOptions (struct dsr_pkt *dp,int interface_id)
 		int dsr_opts_len = opth->p_len + DSR_OPT_HDR_LEN;
 
 		if (options !=NULL)
-			free(options);
+			delete [] options;
 
-		options = (dsr_opt_hdr *)malloc (dsr_opts_len);
+		options = (dsr_opt_hdr *)new char[dsr_opts_len];
 		memcpy((char*)options,(char*)opth,dsr_pkt_opts_len(dp));
         	
 		setBitLength ((DSR_OPT_HDR_LEN+IP_HDR_LEN+options->p_len)*8);

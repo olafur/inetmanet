@@ -68,8 +68,10 @@ typedef struct list_head list_t;
 #define DSR_WRITE_UNLOCK(l)
 #define DSR_READ_LOCK(l)
 #define DSR_READ_UNLOCK(l)
-#define MALLOC(s, p)        malloc(s)
-#define FREE(p)             free(p)
+//#define MALLOC(s, p)        malloc(s)
+//#define FREE(p)             free(p)
+#define MALLOC(s, p) new char[s]
+#define FREE(p) delete [] p;
 
 #endif				/* __KERNEL__ */
 
