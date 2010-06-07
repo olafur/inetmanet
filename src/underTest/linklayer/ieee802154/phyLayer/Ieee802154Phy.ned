@@ -17,6 +17,7 @@ simple Ieee802154Phy
 
         // used by PathLossReceptionModel
         double pathLossAlpha = default(2);
+        double shadowingDeviation @unit("dB") = default(0dB); // used by the shadowing model calculation
 
         // used by Ieee802154RadioModel
         double snirThreshold @unit("dB") = default(4dB); 
