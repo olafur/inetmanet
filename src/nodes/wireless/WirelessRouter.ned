@@ -49,7 +49,7 @@ module WirelessRouter
         int numUdpApps = default(0);
         string tcpAppType = default("n/a");
         string udpAppType = default("n/a");
-        string mgmtType = default("IEEE80211MgmtAP");
+        string mgmtType = default("Ieee80211MgmtAP");
         bool IPForward = default(true);
         int namid = default(-1);
     gates:
