@@ -21,8 +21,8 @@
 #include "IReceptionModel.h"
 
 /**
- * Path loss model which calculates the received power using a path loss exponent
- * and the distance.
+ * Path loss model which calculates the received power using a path loss exponent,
+ * the distance and log-normal distribution shadowing.
  */
 class INET_API PathLossReceptionModel : public IReceptionModel
 {

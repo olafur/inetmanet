@@ -121,8 +121,6 @@ class INET_API RoutingTable: public cSimpleModule, public IRoutingTable, protect
     // invalidates routing cache and local addresses cache
     virtual void invalidateCache();
 
-
-
   public:
     RoutingTable();
     virtual ~RoutingTable();

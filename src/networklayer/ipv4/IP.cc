@@ -227,10 +227,6 @@ void IP::handleReceivedICMP(ICMPMessage *msg)
 
 void IP::handleMessageFromHL(cPacket *msg)
 {
-    InterfaceEntry *destIE=NULL; // will be filled in by encapsulate() or dsrFillDestIE
-    IPAddress nextHopAddress;
-    IPAddress *nextHopAddressPrt=NULL;
-
     // if no interface exists, do not send datagram
     if (ift->getNumInterfaces() == 0)
     {
@@ -238,6 +234,11 @@ void IP::handleMessageFromHL(cPacket *msg)
         delete msg;
         return;
     }
+
+    // encapsulate and send
+    InterfaceEntry *destIE=NULL; // will be filled in by encapsulate() or dsrFillDestIE
+    IPAddress nextHopAddress;
+    IPAddress *nextHopAddressPrt=NULL;
 
 // if HL send a Ipdatagram routing the packet
     if (dynamic_cast<IPDatagram *>(msg))

@@ -1,6 +1,6 @@
 //
 // Copyright (C) 2004 Andras Varga
-//               2009 Thomas Reschka
+// Copyright (C) 2009-2010 Thomas Reschka
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -119,7 +119,7 @@ class TCPOption
 //   by cMessage::length().
 // - Reserved (reserved for future use)
 // - Checksum (header checksum): modelled by cMessage::hasBitError()
-// - Header Options: Currently only EOL, NOP, MSS, SACK_PERMITTED and SACK are implemented
+// - Header Options: Currently only EOL, NOP, MSS, WS, SACK_PERMITTED, SACK and TS are implemented
 // - Padding
 //
 // cMessage::getKind() may be set to an arbitrary value: TCP entities will
@@ -169,7 +169,7 @@ packet TCPSegment
     unsigned short urgentPointer;
 
     // Header options (optional)
-    // Currently only EOL, NOP, MSS, SACK_PERMITTED and SACK are implemented
+    // Currently only EOL, NOP, MSS, WS, SACK_PERMITTED, SACK and TS are implemented
     TCPOption options[];
 
     // Payload length in octets (not an actual \TCP header field).
