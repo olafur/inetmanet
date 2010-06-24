@@ -24,8 +24,8 @@
 
 #include <omnetpp.h>
 
-#include "TraCIMobility.h"
-#include "TraCIScenarioManager.h"
+#include "mobility/traci/TraCIMobility.h"
+#include "world/traci/TraCIScenarioManager.h"
 
 /**
  * Processes an XML script to test the OMNeT++ TraCI client modules.
