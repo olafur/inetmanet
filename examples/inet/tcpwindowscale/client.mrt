@@ -1,6 +1,6 @@
 # filename: client.mrt
 # author: Thomas Reschka
-# routing table for client of tcp example "ber"
+# routing table for client of tcp example "tcpwindowscale"
 
 ifconfig:
 

@@ -81,11 +81,11 @@ network REDTestDebug
     connections:
 // FIXME adjust to the new TCPDump module
 //        r1.pppg$o++ --> {  datarate = 1.5Mbps; delay = 20ms; } --> th.in;
-//        th.out --> dump.ifIn++;
-//        dump.out2++ --> r2.pppg$i++;
+//        th.out --> dump.a$i;
+//        dump.b$o --> r2.pppg$i++;
 //
-//        dump.ifOut++ --> {  datarate = 1.5Mbps; delay = 20ms; } --> r1.pppg$i++;
-//        dump.in2++ <-- {  datarate = 1.5Mbps; delay = 20ms; } <-- r2.pppg$o++;
+//        dump.a$o --> {  datarate = 1.5Mbps; delay = 20ms; } --> r1.pppg$i++;
+//        dump.b$i <-- {  datarate = 1.5Mbps; delay = 20ms; } <-- r2.pppg$o++;
 
         r1.pppg++ <--> {  datarate = 1.5Mbps; delay = 20ms; } <--> r2.pppg++;
 

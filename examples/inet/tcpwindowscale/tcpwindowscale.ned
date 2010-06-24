@@ -2,18 +2,17 @@
 // author: Thomas Reschka
 //
 
-package inet.examples.inet.ber;
+package inet.examples.inet.tcpwindowscale;
 
 import inet.nodes.inet.StandardHost;
 import inet.nodes.inet.StandardHostWithDLThruputMeter;
 import ned.DatarateChannel;
 
-network ber {
+network tcpwindowscale {
     parameters:
-        double n;
         @display("bgb=400,200");
     submodules:
-    client: StandardHost {
+        client: StandardHost {
             parameters:
                 @display("p=50,100");
             gates:
@@ -25,6 +24,14 @@ network ber {
             gates:
                 pppg[1];
         }
-    connections:
-        client.pppg[0] <--> { datarate = 10Mbps; delay = 0.565us; per = 0; ber = n; } <--> server.pppg[0];
+    connections allowunconnected:
+        client.pppg[0] <--> LFNPath <--> server.pppg[0];
+}
+
+channel LFNPath extends DatarateChannel {
+    parameters:
+        datarate = 1Gbps;
+        delay = 565ms;
+        per = 0;
+        ber = 0;
 }

@@ -2,24 +2,17 @@
 // author: Thomas Reschka
 //
 
-package inet.examples.emulation.extserver;
+package inet.examples.inet.tcptimestamps;
 
-import inet.nodes.inet.ExtRouter;
 import inet.nodes.inet.StandardHost;
+import inet.nodes.inet.StandardHostWithULDropsGenerator;
 import ned.DatarateChannel;
 
-network extserver {
+network tcptimestamps {
     parameters:
         @display("bgb=400,200");
     submodules:
-        router: ExtRouter {
-            parameters:
-                numExtInterfaces = 1;
-                @display("p=200,100;i=abstract/router");
-            gates:
-                pppg[2];
-        }
-        client: StandardHost {
+        client: StandardHostWithULDropsGenerator {
             parameters:
                 @display("p=50,100");
             gates:
@@ -32,14 +25,13 @@ network extserver {
                 pppg[1];
         }
     connections allowunconnected:
-        router.pppg[0] <--> NormalPath <--> client.pppg[0];
-        router.pppg[1] <--> NormalPath <--> server.pppg[0];
+        client.pppg[0] <--> NormalPath <--> server.pppg[0];
 }
 
 channel NormalPath extends DatarateChannel {
     parameters:
         datarate = 100Mbps;
-        delay = 0.0565us; // 10m
+        delay = 0.5ms;
         per = 0;
         ber = 0;
 }

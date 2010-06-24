@@ -1,10 +1,10 @@
 # filename: client.mrt
 # author: Thomas Reschka
-# routing table for client of tcp example "ber"
+# routing table for client of tcp example "extserver"
 
 ifconfig:
 
-# interface 0 to client
+# interface 0 to router
 name: ppp0
     inet_addr: 172.0.0.1
     Mask: 255.255.255.0
@@ -17,6 +17,6 @@ ifconfigend.
 route:
 
 #Destination     Gateway          Genmask          Flags  Metric  Iface
-172.0.0.2        172.0.0.1        255.255.255.0    H      0       ppp0
+default:         172.0.0.100      0.0.0.0          G      0       ppp0
 
 routeend.
