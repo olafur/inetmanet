@@ -43,6 +43,7 @@ simple Ieee80211MgmtAPSimplified like Ieee80211Mgmt
 {
     parameters:
         int frameCapacity = default(100);
+        bool forceRelayUnit=default(false);
         @display("i=block/cogwheel");
     gates:
         input uppergateIn; // from MACRelayUnit; can be left unconnected

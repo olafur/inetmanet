@@ -41,6 +41,7 @@ simple Ieee80211MgmtAP like Ieee80211Mgmt
         int frameCapacity = default(100); // maximum queue length
         int numAuthSteps = default(4); // use 2 for Open System auth, 4 for WEP
         //dataRate: numeric; XXX TBD
+        bool forceRelayUnit=default(false);
         @display("i=block/cogwheel");
     gates:
         input uppergateIn; // from MACRelayUnit; can be left unconnected

@@ -28,7 +28,8 @@ void Ieee80211MgmtAPBase::initialize(int stage)
     // JcM fix: Check if really the module connected in uppergateOut is a relay unit
     // or a network layer. This is important to encap/decap the packet correctly in the Mgmt module
     if (stage==0) {
-    	if (gate("uppergateOut")->getPathEndGate()->isConnected() && strcmp(gate("uppergateOut")->getPathEndGate()->getOwnerModule()->getName(),"relayUnit")==0) {
+    	if (gate("uppergateOut")->getPathEndGate()->isConnected() &&
+    		(strcmp(gate("uppergateOut")->getPathEndGate()->getOwnerModule()->getName(),"relayUnit")==0 || par("forceRelayUnit").boolValue())) {
     		hasRelayUnit = true;
     	} else{
     		hasRelayUnit = false;
