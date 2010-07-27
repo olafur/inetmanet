@@ -166,6 +166,7 @@ void csma802154::initialize(int stage) {
 		rxAckTimer = new cMessage("timer-rxAck");
 		macState = IDLE_1;
 		txAttempts = 0;
+		PLME_bitrate_request();
 
 	} else if(stage == 1) {
 		EV << "queueLength = " << queueLength

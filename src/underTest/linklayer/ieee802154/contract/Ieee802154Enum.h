@@ -17,7 +17,8 @@ enum Ieee802154MacPhyPrimitiveType
 	PLME_SET_TRX_STATE_REQUEST 			= 6,
 	PLME_SET_TRX_STATE_CONFIRM 			= 7,
 	PLME_SET_REQUEST 				= 8,
-	PLME_SET_CONFIRM 				= 9
+	PLME_SET_CONFIRM 				= 9,
+	PLME_GET_BITRATE                = 10
 };
 
 //PHY enumerations description (Table 16)

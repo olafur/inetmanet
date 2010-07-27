@@ -302,7 +302,9 @@ void Ieee802154Phy::handlePrimitive(int msgkind, cMessage *msg)
 			EV <<"[PHY]: this is a PLME_SET_REQUEST" << endl;
 			handle_PLME_SET_request(primitive);
 			break;
-
+		case PLME_GET_BITRATE:
+			PLME_bitRate(rs.getBitrate());
+			break;
     	default:
     		error("[PHY]: unknown primitive received (msgkind=%d)", msgkind);
     		break;
@@ -649,6 +651,7 @@ void Ieee802154Phy::PD_DATA_confirm(PHYenum status)
 	Ieee802154MacPhyPrimitives *primitive = new Ieee802154MacPhyPrimitives();
 	primitive->setKind(PD_DATA_CONFIRM);
 	primitive->setStatus(status);
+	primitive->setBitRate(rs.getBitrate());
 	send(primitive, uppergateOut);
 }
 
@@ -657,6 +660,16 @@ void Ieee802154Phy::PLME_CCA_confirm(PHYenum status)
 	Ieee802154MacPhyPrimitives *primitive = new Ieee802154MacPhyPrimitives();
 	primitive->setKind(PLME_CCA_CONFIRM);
 	primitive->setStatus(status);
+	primitive->setBitRate(rs.getBitrate());
+	send(primitive, uppergateOut);
+}
+
+void Ieee802154Phy::PLME_bitRate(double bitRate)
+{
+	Ieee802154MacPhyPrimitives *primitive = new Ieee802154MacPhyPrimitives();
+	primitive->setKind(PLME_GET_BITRATE);
+	primitive->setBitRate(bitRate);
+	primitive->setBitRate(rs.getBitrate());
 	send(primitive, uppergateOut);
 }
 
@@ -666,6 +679,7 @@ void Ieee802154Phy::PLME_ED_confirm(PHYenum status, UINT_8 energyLevel)
 	primitive->setKind(PLME_ED_CONFIRM);
 	primitive->setStatus(status);
 	primitive->setEnergyLevel(energyLevel);
+	primitive->setBitRate(rs.getBitrate());
 	send(primitive, uppergateOut);
 }
 
@@ -674,6 +688,7 @@ void Ieee802154Phy::PLME_SET_TRX_STATE_confirm(PHYenum status)
 	Ieee802154MacPhyPrimitives *primitive = new Ieee802154MacPhyPrimitives();
 	primitive->setKind(PLME_SET_TRX_STATE_CONFIRM);
 	primitive->setStatus(status);
+	primitive->setBitRate(rs.getBitrate());
 	EV << "[PHY]: sending a PLME_SET_TRX_STATE_confirm with " << status << " to MAC" << endl;
 	send(primitive, uppergateOut);
 }
@@ -684,6 +699,7 @@ void Ieee802154Phy::PLME_SET_confirm(PHYenum status, PHYPIBenum attribute)
 	primitive->setKind(PLME_SET_CONFIRM);
 	primitive->setStatus(status);
 	primitive->setAttribute(attribute);
+	primitive->setBitRate(rs.getBitrate());
 	send(primitive, uppergateOut);
 }
 

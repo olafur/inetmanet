@@ -1552,6 +1552,17 @@ void Ieee802154Mac::PLME_CCA_request()
 	EV << "[MAC]: send PLME_CCA_request to PHY layer" << endl;
 }
 
+void Ieee802154Mac::PLME_bitrate_request()
+{
+	// construct PLME_CCA_request primitive
+	Ieee802154MacPhyPrimitives *primitive = new Ieee802154MacPhyPrimitives();
+	primitive->setKind(PLME_GET_BITRATE);
+	primitive->setBitLength(0);
+	send(primitive, mLowergateOut);
+	EV << "[MAC]: send PLME_GET_BITRATE to PHY layer" << endl;
+}
+
+
 //-------------------------------------------------------------------------------/
 /************************* <PHY2MAC primitive Handler> **************************/
 //-------------------------------------------------------------------------------/
@@ -1560,6 +1571,9 @@ void Ieee802154Mac::handleMacPhyPrimitive(int msgkind, cMessage* msg)
 	Ieee802154MacPhyPrimitives* primitive = check_and_cast<Ieee802154MacPhyPrimitives *>(msg);
     switch(msgkind)
     {
+		if (primitive->getBitRate()>0)
+			bitrate = primitive->getBitRate();
+
     	case PD_DATA_CONFIRM:
     			handle_PD_DATA_confirm(PHYenum(primitive->getStatus()));
     			delete primitive;
@@ -1582,6 +1596,11 @@ void Ieee802154Mac::handleMacPhyPrimitive(int msgkind, cMessage* msg)
     	case PLME_SET_CONFIRM:
     			// TBD
     			break;
+
+    	case PLME_GET_BITRATE:
+    	        delete primitive;
+    			break;
+
 
     	default:
     			error("unknown primitive (msgkind=%d)", msgkind);
