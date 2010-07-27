@@ -374,7 +374,7 @@ void ManetRoutingBase::sendToIp (cPacket *msg, int srcPort, const Uint128& destA
 			srcadd = hostAddress.getIPAddress();
 
 		EV << "Sending app packet " << msg->getName() << " over IPv4." << " from " <<
-			add.str() << " to " << add.str() << "\n";
+				srcadd.str() << " to " << add.str() << "\n";
 		IPControlInfo *ipControlInfo = new IPControlInfo();
 		ipControlInfo->setDestAddr(add);
 		//ipControlInfo->setProtocol(IP_PROT_UDP);
