@@ -102,6 +102,7 @@ void Ieee802154Phy::initialize(int stage)
     {
         uppergateIn = findGate("uppergateIn");
         uppergateOut = findGate("uppergateOut");
+        gate("radioIn")->setDeliverOnReceptionStart(true);
 
         // The following parameters to be specified in omnetpp.ini
         m_debug				= par("debug");
