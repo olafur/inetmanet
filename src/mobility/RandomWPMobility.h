@@ -31,11 +31,14 @@
 class INET_API RandomWPMobility : public LineSegmentsMobilityBase
 {
   protected:
-    bool nextMoveIsWait;
+    bool moving;
 
   protected:
     /** @brief Initializes mobility model parameters.*/
     virtual void initialize(int);
+
+    /** @brief Called upon arrival of a self messages.*/
+    virtual void handleSelfMsg(cMessage *msg);
 
     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setTargetPosition();
