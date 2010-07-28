@@ -3547,6 +3547,7 @@ int Ieee802154Mac::calMHRByteLength(UINT_8 addrModeSum)
 		default:
 			error("[MAC]: impossible address mode sum!");
 	}
+	return 0;
 }
 
 simtime_t Ieee802154Mac::calDuration(Ieee802154Frame* frame)

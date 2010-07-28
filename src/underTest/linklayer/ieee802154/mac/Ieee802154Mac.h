@@ -165,6 +165,7 @@ struct taskPending
 				// shutup compiler.
 				//return mlme_poll_request_frFunc;
 		}
+		return 0;
 	}
 
 	//----------------

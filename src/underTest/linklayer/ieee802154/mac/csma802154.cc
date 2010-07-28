@@ -760,8 +760,9 @@ void csma802154::startTimer(t_mac_timer timer) {
 		scheduleAt(simTime()+sifs, sifsTimer);
 	} else if (timer==TIMER_RX_ACK) {
 		assert(useMACAcks);
-		EV << "(startTimer) rxAckTimer value=" << macAckWaitDuration << endl;
-		scheduleAt(simTime()+macAckWaitDuration, rxAckTimer);
+		simtime_t ackDuration = ((double)(ackLength+(def_phyHeaderLength*8)))/bitrate;
+		EV << "(startTimer) rxAckTimer value=" << macAckWaitDuration <<" + " << ackDuration<< endl;
+		scheduleAt(simTime()+ackDuration+macAckWaitDuration, rxAckTimer);
 	} else {
 		EV << "Unknown timer requested to start:" << timer << endl;
 	}
