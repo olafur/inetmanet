@@ -165,6 +165,7 @@ struct taskPending
 				// shutup compiler.
 				//return mlme_poll_request_frFunc;
 		}
+		return 0;
 	}
 
 	//----------------
@@ -275,6 +276,9 @@ public:
 	IE3ADDR getMacAddr() {return aExtendedAddress;}
 
 protected:
+    /** @brief the bit rate at which we transmit */
+    double bitrate;
+
 	/**
 	* @name Initializtion functions
 	*/
@@ -336,6 +340,7 @@ protected:
 	virtual void    PLME_SET_TRX_STATE_request    (PHYenum state);
 	virtual void    PLME_SET_request    (PHYPIBenum attribute);
 	virtual void    PLME_CCA_request    ();
+	virtual void	PLME_bitrate_request();
 	virtual void    handle_PD_DATA_confirm    (PHYenum status);
 	virtual void    handle_PLME_CCA_confirm    (PHYenum status);
 	virtual void    handle_PLME_SET_TRX_STATE_confirm    (PHYenum status);

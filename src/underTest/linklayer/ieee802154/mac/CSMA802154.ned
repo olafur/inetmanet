@@ -55,8 +55,6 @@ simple CSMA802154
         // Time to switch radio from Rx to Tx state
         double aTurnaroundTime @unit(s) = default(0.000192 s);    // 12 symbols
         double aUnitBackoffPeriod @unit(s) = default(0.00032 s);
-       // bit rate 
-        double bitrate @unit(bps) = default(250000 bps);
         // complete MAC ack message length (in bits) 
         // (! headerLength is not added to this)
         double ackLength @unit(bit) = default(40 bit);        

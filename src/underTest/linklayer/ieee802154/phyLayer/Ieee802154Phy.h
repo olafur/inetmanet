@@ -55,6 +55,7 @@ class INET_API Ieee802154Phy : public ChannelAccessExtended
 		void				PLME_SET_TRX_STATE_confirm		(PHYenum status);
 		void				handle_PLME_SET_request			(Ieee802154MacPhyPrimitives *primitive);
 		void				PLME_SET_confirm			(PHYenum status, PHYPIBenum attribute);
+		void 				PLME_bitRate(double bitRate);
 
 		void				setRadioState			(RadioState::State newState);
 		int					getChannelNumber		() const {return rs.getChannelNumber();}

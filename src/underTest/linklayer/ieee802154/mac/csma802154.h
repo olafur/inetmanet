@@ -247,9 +247,6 @@ class  csma802154 : public Ieee802154Mac
      */
     unsigned int txAttempts;
 
-    /** @brief the bit rate at which we transmit */
-    double bitrate;
-
 
     /** @brief plus category from BB */
     int catDroppedPacket;

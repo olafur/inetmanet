@@ -15,6 +15,7 @@ packet Ieee802154MacPhyPrimitives
 
     short status enum(PHYenum);
     short attribute enum(PHYPIBenum);
+    double   bitRate;
 
     unsigned char energyLevel;
 
